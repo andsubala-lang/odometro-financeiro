@@ -335,7 +335,7 @@
           </div>
           <div class="row" style="margin-top:10px;">
             <div class="money-field plain" style="width:150px;"><label>Km rodado hoje (total do dia)</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="dia-km" placeholder="0"></div></div>
-            <div class="money-field plain" style="width:170px;"><label>Litros abastecidos (se abasteceu hoje)</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="d-litros" placeholder="0"></div></div>
+            <div class="money-field plain" style="width:170px;"><label id="label-litros">Litros abastecidos (se abasteceu hoje)</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="d-litros" placeholder="0"></div></div>
           </div>
         </div>
       </div>
@@ -369,7 +369,7 @@
 
       <div class="summary-cards" style="grid-template-columns: repeat(2,1fr);">
         <div class="sc amber"><div class="l">Custo por km rodado</div><div class="n" id="m-custokm">R$ 0,00</div></div>
-        <div class="sc"><div class="l">Consumo médio</div><div class="n" id="m-consumo">— km/l</div></div>
+        <div class="sc"><div class="l" id="label-consumo">Consumo médio</div><div class="n" id="m-consumo">— km/l</div></div>
       </div>
 
       <div class="progress-wrap">
@@ -445,6 +445,21 @@
       <div class="tips" id="sugestao-mensal" style="margin-bottom:16px; display:none;"></div>
       <button class="btn" id="btn-salvar-metas">Salvar metas</button>
       <span class="save-status" id="save-status-metas">Salvo ✓</span>
+    </div>
+
+    <div class="card">
+      <h2>Seu <span class="accent">veículo</span></h2>
+      <div class="field" style="width:280px;">
+        <label>Tipo de abastecimento</label>
+        <select id="unidade-combustivel" style="width:100%; padding:10px 12px; margin-top:5px;">
+          <option value="litros">Litros (gasolina, etanol, diesel)</option>
+          <option value="m3">m³ (GNV)</option>
+        </select>
+      </div>
+      <div class="save-row">
+        <button class="btn" id="btn-salvar-veiculo">Salvar</button>
+        <span class="save-status" id="save-status-veiculo">Salvo ✓</span>
+      </div>
     </div>
 
     <div class="card">
@@ -560,15 +575,15 @@
   }
 
   async function getGoals(){
-    const u = uid(); if(!u) return {daily:0, monthly:0, diasMes:22};
+    const u = uid(); if(!u) return {daily:0, monthly:0, diasMes:22, unidadeCombustivel:'litros'};
     try{
       const doc = await db().collection('users').doc(u).collection('meta').doc('goals').get();
-      return doc.exists ? doc.data() : {daily:0, monthly:0, diasMes:22};
-    }catch(e){ return {daily:0, monthly:0, diasMes:22}; }
+      return doc.exists ? Object.assign({unidadeCombustivel:'litros'}, doc.data()) : {daily:0, monthly:0, diasMes:22, unidadeCombustivel:'litros'};
+    }catch(e){ return {daily:0, monthly:0, diasMes:22, unidadeCombustivel:'litros'}; }
   }
   async function setGoals(g){
     const u = uid(); if(!u) return;
-    await db().collection('users').doc(u).collection('meta').doc('goals').set(g);
+    await db().collection('users').doc(u).collection('meta').doc('goals').set(g, {merge:true});
   }
 
   const DEFAULT_FIXED_COSTS = [];
@@ -769,7 +784,8 @@
 
     const custoPorKm = kmMes>0 ? (gastoVar+totalFixos)/kmMes : 0;
     $('m-custokm').textContent = kmMes>0 ? brl(custoPorKm) : '—';
-    $('m-consumo').textContent = (litrosTotal>0 && kmMes>0) ? (kmMes/litrosTotal).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' km/l' : '— km/l';
+    const sufixoConsumo = unidadeAtual === 'm3' ? 'km/m³' : 'km/l';
+    $('m-consumo').textContent = (litrosTotal>0 && kmMes>0) ? (kmMes/litrosTotal).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' ' + sufixoConsumo : '— '+sufixoConsumo;
 
     const goals = await getGoals();
     const metaMensal = goals.monthly || 0;
@@ -912,11 +928,26 @@
   });
 
   // ---------- METAS ----------
+  let unidadeAtual = 'litros';
+
+  function applyUnidadeLabels(){
+    if(unidadeAtual === 'm3'){
+      $('label-litros').textContent = 'm³ abastecidos (se abasteceu hoje)';
+      $('label-consumo').textContent = 'Consumo médio';
+    } else {
+      $('label-litros').textContent = 'Litros abastecidos (se abasteceu hoje)';
+      $('label-consumo').textContent = 'Consumo médio';
+    }
+  }
+
   async function loadGoalsForm(){
     const g = await getGoals();
     $('meta-diaria').value = g.daily || '';
     $('meta-mensal').value = g.monthly || '';
     $('dias-mes').value = g.diasMes || 22;
+    unidadeAtual = g.unidadeCombustivel || 'litros';
+    $('unidade-combustivel').value = unidadeAtual;
+    applyUnidadeLabels();
     updateSugestaoMensal();
   }
   $('btn-salvar-metas').addEventListener('click', async ()=>{
@@ -927,6 +958,16 @@
     st.classList.add('show');
     setTimeout(()=>st.classList.remove('show'), 2000);
     renderMetasProgress();
+  });
+
+  $('btn-salvar-veiculo').addEventListener('click', async ()=>{
+    unidadeAtual = $('unidade-combustivel').value;
+    await setGoals({ unidadeCombustivel: unidadeAtual });
+    applyUnidadeLabels();
+    const st = $('save-status-veiculo');
+    st.textContent = 'Salvo ✓';
+    st.classList.add('show');
+    setTimeout(()=>st.classList.remove('show'), 2000);
   });
 
   function updateSugestaoMensal(){
