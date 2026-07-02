@@ -173,9 +173,18 @@
   .freq-tag.semanal{ background: rgba(242,183,5,0.15); color: var(--amber); }
 
   .turno-summary{ display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-top:16px; }
-  .turno-mini{ background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:9px 10px; }
-  .turno-mini .tm-label{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
-  .turno-mini .tm-value{ font-family:'JetBrains Mono'; font-size:12px; margin-top:3px; }
+  .turno-mini{ background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:12px 10px; text-align:center; }
+  .turno-mini .tm-label{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .turno-mini .tm-amount{ font-family:'JetBrains Mono'; font-size:15px; font-weight:700; color:var(--text); }
+  .turno-mini .tm-time{ font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); margin-top:3px; }
+
+  .time-input{
+    background: var(--card-2); border:1px solid var(--border); color:var(--text);
+    padding:10px 8px; border-radius:9px; font-family:'JetBrains Mono'; font-size:14px;
+    width:56px; text-align:center;
+  }
+  .time-input:focus{ outline:none; border-color: var(--amber); }
+  .time-sep{ color:var(--muted); font-size:12px; }
 
   .turno-tabs{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
   .turno-btn{
@@ -273,9 +282,9 @@
         <div class="stat"><div class="n" id="s-hora">R$ 0,00</div><div class="l">Resultado por hora</div></div>
       </div>
       <div class="turno-summary">
-        <div class="turno-mini"><div class="tm-label">Manhã</div><div class="tm-value" id="tm-manha">R$ 0 · 0 km · 0 h</div></div>
-        <div class="turno-mini"><div class="tm-label">Almoço</div><div class="tm-value" id="tm-almoco">R$ 0 · 0 km · 0 h</div></div>
-        <div class="turno-mini"><div class="tm-label">Noite</div><div class="tm-value" id="tm-noite">R$ 0 · 0 km · 0 h</div></div>
+        <div class="turno-mini"><div class="tm-label">☀️ Manhã</div><div class="tm-amount" id="tm-manha-valor">R$ 0,00</div><div class="tm-time" id="tm-manha-tempo">0h 00min</div></div>
+        <div class="turno-mini"><div class="tm-label">🍽️ Almoço</div><div class="tm-amount" id="tm-almoco-valor">R$ 0,00</div><div class="tm-time" id="tm-almoco-tempo">0h 00min</div></div>
+        <div class="turno-mini"><div class="tm-label">🌙 Noite</div><div class="tm-amount" id="tm-noite-valor">R$ 0,00</div><div class="tm-time" id="tm-noite-tempo">0h 00min</div></div>
       </div>
       <div class="sublabel">Custos fixos (lava jato, aluguel do carro etc.) não entram aqui — eles são descontados no resumo do mês.</div>
     </div>
@@ -306,8 +315,15 @@
             <div class="money-field"><label>Outros</label><div class="inputwrap"><span class="prefix">R$</span><input type="number" min="0" step="0.01" id="g-outros" placeholder="0,00"></div></div>
           </div>
           <div class="row" style="margin-top:10px;">
-            <div class="money-field plain" style="width:130px;"><label>Km do turno</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="km" placeholder="0"></div></div>
-            <div class="money-field plain" style="width:150px;"><label>Horas do turno</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="horas" placeholder="0"></div></div>
+            <div class="field">
+              <label>Horas do turno</label>
+              <div style="display:flex; align-items:center; gap:6px; margin-top:5px;">
+                <input type="number" min="0" step="1" id="horas-h" placeholder="0" class="time-input">
+                <span class="time-sep">h</span>
+                <input type="number" min="0" max="59" step="1" id="horas-min" placeholder="0" class="time-input">
+                <span class="time-sep">min</span>
+              </div>
+            </div>
           </div>
         </div>
         <div>
@@ -318,6 +334,7 @@
             <div class="money-field"><label>Outros</label><div class="inputwrap"><span class="prefix">R$</span><input type="number" min="0" step="0.01" id="d-outros" placeholder="0,00"></div></div>
           </div>
           <div class="row" style="margin-top:10px;">
+            <div class="money-field plain" style="width:150px;"><label>Km rodado hoje (total do dia)</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="dia-km" placeholder="0"></div></div>
             <div class="money-field plain" style="width:170px;"><label>Litros abastecidos (se abasteceu hoje)</label><div class="inputwrap"><input type="number" min="0" step="0.1" id="d-litros" placeholder="0"></div></div>
           </div>
         </div>
@@ -465,31 +482,60 @@
   const TURNOS = ['manha','almoco','noite'];
   const TURNO_LABEL = {manha:'Manhã', almoco:'Almoço', noite:'Noite'};
 
-  function emptyTurno(){ return {ganhos:{n99:0, indrive:0, entregas:0, outros:0}, km:0, horas:0}; }
+  function emptyTurno(){ return {ganhos:{n99:0, indrive:0, entregas:0, outros:0}, horasInt:0, minutos:0}; }
   function emptyEntry(){
     return {
       turnos:{ manha: emptyTurno(), almoco: emptyTurno(), noite: emptyTurno() },
       gastos:{combustivel:0, alimentacao:0, outros:0},
-      litros:0
+      litros:0, km:0
     };
   }
-  // Dias salvos antes dos turnos existirem vêm sem "turnos" — migramos pra dentro do turno da manhã,
-  // assim o histórico antigo continua contando certinho nos totais e no mês.
+  // Compatível com 3 formatos que essa conta já teve: (A) dia plano sem turnos,
+  // (B) turnos com km e horas decimal por turno, (C) formato atual (km do dia + horas em h/min).
   function normalizeEntry(raw){
     if(!raw) return emptyEntry();
-    if(raw.turnos) return Object.assign({litros:0}, raw);
+    if(raw.turnos){
+      const e = emptyEntry();
+      e.gastos = Object.assign({combustivel:0, alimentacao:0, outros:0}, raw.gastos||{});
+      e.litros = raw.litros || 0;
+      if(typeof raw.km === 'number'){
+        e.km = raw.km;
+      } else {
+        e.km = TURNOS.reduce((a,k)=> a + ((raw.turnos[k] && raw.turnos[k].km) || 0), 0);
+      }
+      TURNOS.forEach(k=>{
+        const t = raw.turnos[k] || {};
+        e.turnos[k].ganhos = Object.assign({n99:0,indrive:0,entregas:0,outros:0}, t.ganhos||{});
+        if(typeof t.horasInt === 'number' || typeof t.minutos === 'number'){
+          e.turnos[k].horasInt = t.horasInt||0;
+          e.turnos[k].minutos = t.minutos||0;
+        } else {
+          const dec = t.horas||0;
+          e.turnos[k].horasInt = Math.floor(dec);
+          e.turnos[k].minutos = Math.round((dec-Math.floor(dec))*60);
+        }
+      });
+      return e;
+    }
     const e = emptyEntry();
-    e.turnos.manha = { ganhos: Object.assign({n99:0,indrive:0,entregas:0,outros:0}, raw.ganhos||{}), km: raw.km||0, horas: raw.horas||0 };
+    e.turnos.manha.ganhos = Object.assign({n99:0,indrive:0,entregas:0,outros:0}, raw.ganhos||{});
+    const dec = raw.horas||0;
+    e.turnos.manha.horasInt = Math.floor(dec);
+    e.turnos.manha.minutos = Math.round((dec-Math.floor(dec))*60);
     e.gastos = Object.assign({combustivel:0, alimentacao:0, outros:0}, raw.gastos||{});
     e.litros = raw.litros || 0;
+    e.km = raw.km || 0;
     return e;
   }
 
   function sumObj(o){ return Object.values(o).reduce((a,b)=>a+(Number(b)||0),0); }
   function ganhoTurno(t){ return sumObj(t.ganhos); }
   function ganhoBruto(e){ return TURNOS.reduce((a,k)=>a+ganhoTurno(e.turnos[k]),0); }
-  function kmTotal(e){ return TURNOS.reduce((a,k)=>a+(Number(e.turnos[k].km)||0),0); }
-  function horasTotal(e){ return TURNOS.reduce((a,k)=>a+(Number(e.turnos[k].horas)||0),0); }
+  function horasDecimalTurno(t){ return (Number(t.horasInt)||0) + (Number(t.minutos)||0)/60; }
+  function formatHM(t){ return `${Number(t.horasInt)||0}h ${String(Number(t.minutos)||0).padStart(2,'0')}min`; }
+  function formatHMDecimal(dec){ const h=Math.floor(dec); const m=Math.round((dec-h)*60); return `${h}h ${String(m).padStart(2,'0')}min`; }
+  function kmTotal(e){ return Number(e.km)||0; }
+  function horasTotal(e){ return TURNOS.reduce((a,k)=>a+horasDecimalTurno(e.turnos[k]),0); }
   function gastoDia(e){ return sumObj(e.gastos); }
   function resultadoDia(e){ return ganhoBruto(e)-gastoDia(e); }
 
@@ -567,12 +613,13 @@
     t.ganhos.indrive = parseFloat($('g-indrive').value)||0;
     t.ganhos.entregas = parseFloat($('g-entregas').value)||0;
     t.ganhos.outros = parseFloat($('g-outros').value)||0;
-    t.km = parseFloat($('km').value)||0;
-    t.horas = parseFloat($('horas').value)||0;
+    t.horasInt = parseInt($('horas-h').value)||0;
+    t.minutos = Math.min(59, parseInt($('horas-min').value)||0);
     currentEntry.gastos.combustivel = parseFloat($('d-combustivel').value)||0;
     currentEntry.gastos.alimentacao = parseFloat($('d-alimentacao').value)||0;
     currentEntry.gastos.outros = parseFloat($('d-outros').value)||0;
     currentEntry.litros = parseFloat($('d-litros').value)||0;
+    currentEntry.km = parseFloat($('dia-km').value)||0;
   }
 
   function fillFormFromTurno(turno){
@@ -581,12 +628,13 @@
     $('g-indrive').value = t.ganhos.indrive || '';
     $('g-entregas').value = t.ganhos.entregas || '';
     $('g-outros').value = t.ganhos.outros || '';
-    $('km').value = t.km || '';
-    $('horas').value = t.horas || '';
+    $('horas-h').value = t.horasInt || '';
+    $('horas-min').value = t.minutos || '';
     $('d-combustivel').value = currentEntry.gastos.combustivel || '';
     $('d-alimentacao').value = currentEntry.gastos.alimentacao || '';
     $('d-outros').value = currentEntry.gastos.outros || '';
     $('d-litros').value = currentEntry.litros || '';
+    $('dia-km').value = currentEntry.km || '';
   }
 
   document.querySelectorAll('.turno-btn').forEach(btn=>{
@@ -619,11 +667,12 @@
 
     TURNOS.forEach(k=>{
       const tt = currentEntry.turnos[k];
-      $('tm-'+k).textContent = `${brl(ganhoTurno(tt))} · ${tt.km||0} km · ${tt.horas||0} h`;
+      $('tm-'+k+'-valor').textContent = brl(ganhoTurno(tt));
+      $('tm-'+k+'-tempo').textContent = formatHM(tt);
     });
   }
 
-  ['g-99','g-indrive','g-entregas','g-outros','d-combustivel','d-alimentacao','d-outros','d-litros','km','horas'].forEach(id=>{
+  ['g-99','g-indrive','g-entregas','g-outros','d-combustivel','d-alimentacao','d-outros','d-litros','horas-h','horas-min','dia-km'].forEach(id=>{
     $(id).addEventListener('input', updateHero);
   });
 
@@ -750,7 +799,7 @@
           <td class="${r>=0?'pos-txt':'neg-txt'}">${brl(r)}</td>
           <td>${km||0} km</td>
           <td>${brl(rkm)}</td>
-          <td>${horas||0} h</td>
+          <td>${formatHMDecimal(horas)}</td>
           <td class="edit"><a data-date="${date}">editar</a></td>
         `;
         tbody.appendChild(tr);
