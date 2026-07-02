@@ -89,9 +89,14 @@
   .odometer.zero{ color: var(--amber); text-shadow: 0 0 26px rgba(242,183,5,0.45); border-color: rgba(242,183,5,0.35); }
 
   .hero-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-top:20px; text-align:left; }
-  .stat{ background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+  .stat{ background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:10px 12px; transition: background .15s; }
   .stat .n{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:15px; }
   .stat .l{ font-size:10.5px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px;}
+  .stat.p1{ background: rgba(53,208,127,0.06); border-color: rgba(53,208,127,0.25); }
+  .stat.p1 .n{ font-size:18px; color: var(--green); }
+  .stat.p2{ background: rgba(255,93,93,0.05); border-color: rgba(255,93,93,0.2); }
+  .stat.p2 .n{ font-size:16px; }
+  .stat.p3 .n, .stat.p4 .n{ font-size:13.5px; color: var(--text-muted, var(--muted)); opacity:0.85; }
 
   .card{ background: var(--card); border:1px solid var(--border); border-radius:16px; padding: 18px 20px; margin-bottom: 16px; }
   .card h2{ font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 14px; font-weight:700;}
@@ -118,12 +123,20 @@
   .section-sub{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin: 4px 0 8px; display:flex; justify-content:space-between; }
   .section-sub b{ color:var(--text); font-family:'JetBrains Mono'; }
 
-  .btn{ background: var(--amber); color:#1a1400; border:none; font-weight:700; padding:11px 22px; border-radius:10px; cursor:pointer; font-size:14px; transition: transform .1s, opacity .15s; }
+  .btn{ background: var(--amber); color:#1a1400; border:none; font-weight:700; padding:11px 22px; border-radius:10px; cursor:pointer; font-size:14px; transition: transform .1s, opacity .15s, box-shadow .15s; }
   .btn:hover{ opacity:0.92; }
   .btn:active{ transform: scale(0.98); }
+  .btn:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(242,183,5,0.4); }
   .btn.secondary{ background: var(--card-2); color:var(--text); border:1px solid var(--border); }
+  .btn.secondary:hover{ border-color: var(--amber); opacity:1; }
   .btn.danger{ background: rgba(255,93,93,0.12); color:var(--red); border:1px solid rgba(255,93,93,0.3); }
+  .btn.danger:hover{ background: rgba(255,93,93,0.2); opacity:1; }
   .btn.small{ padding:7px 14px; font-size:12.5px; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  input:focus-visible, select:focus-visible, .time-input:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(242,183,5,0.25); }
+  .sc:hover, .stat:hover, .turno-mini:hover{ background: rgba(255,255,255,0.045); }
+  tbody tr td.edit a:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(242,183,5,0.3); border-radius:4px; }
 
   .save-row{ display:flex; align-items:center; gap:14px; margin-top:4px; flex-wrap:wrap; }
   .save-status{ font-size:12px; color:var(--green); opacity:0; transition:opacity .3s; }
@@ -142,6 +155,14 @@
 
   .progress-wrap{ margin-top:6px; }
   .progress-bar{ height:8px; background: var(--card-2); border-radius:6px; overflow:hidden; border:1px solid var(--border); }
+  .mini-meta{ margin-top:16px; text-align:left; opacity:0.85; }
+  .mini-meta-row{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+  .progress-bar.mini{ height:5px; }
+  .status-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; }
+  .status-dot.excelente{ background: var(--green); box-shadow: 0 0 6px rgba(53,208,127,0.6); }
+  .status-dot.media{ background: var(--amber); box-shadow: 0 0 6px rgba(242,183,5,0.5); }
+  .status-dot.abaixo{ background: var(--red); box-shadow: 0 0 6px rgba(255,93,93,0.5); }
+  .status-dot.neutro{ background: var(--muted); opacity:0.4; }
   .progress-bar > div{ height:100%; background: linear-gradient(90deg, var(--amber), var(--green)); border-radius:6px; transition: width .3s; }
   .progress-label{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:5px; font-family:'JetBrains Mono'; }
 
@@ -221,7 +242,21 @@
   .confirm-actions .btn{ flex:1; padding:11px 0; }
 
   section{ display:none; }
-  section.active{ display:block; }
+  section.active{ display:block; animation: fade-in .18s ease-out; }
+  @keyframes fade-in{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform: translateY(0); } }
+
+  .hero.saved-pulse{ animation: hero-pulse .5s ease-out; }
+  @keyframes hero-pulse{ 0%{ box-shadow: 0 0 0 0 rgba(53,208,127,0.35);} 100%{ box-shadow: 0 0 0 14px rgba(53,208,127,0);} }
+
+  .sc, .stat, .turno-mini{ transition: transform .12s ease, background .15s ease; }
+
+  .skeleton{ position:relative; overflow:hidden; background: var(--card-2); border-radius:8px; color:transparent !important; }
+  .skeleton::after{
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    animation: skeleton-shimmer 1.2s infinite;
+  }
+  @keyframes skeleton-shimmer{ from{ transform: translateX(-100%);} to{ transform: translateX(100%);} }
 
   @media (max-width: 720px){
     .hero-grid{ grid-template-columns: repeat(2,1fr); }
@@ -233,6 +268,25 @@
     .add-cost-form{ grid-template-columns: 1fr; }
     .odometer{ font-size:38px; padding:16px 8px; }
     table{ font-size:11px; }
+  }
+
+  @media (max-width: 360px){
+    .wrap{ padding: 14px 10px 0; }
+    .card{ padding:14px 14px; }
+    .odometer{ font-size:30px; padding:14px 6px; }
+    .turno-summary{ gap:6px; }
+    .turno-mini{ padding:9px 6px; }
+    .brand h1{ font-size:18px; }
+  }
+
+  @media (min-width: 900px){
+    .wrap{ max-width: 1040px; }
+    .summary-cards{ grid-template-columns: repeat(4,1fr); }
+    #tab-estatisticas .summary-cards, #tab-metas .goal-inputs{ grid-template-columns: repeat(2,1fr); }
+  }
+
+  @media (min-width: 1300px){
+    .wrap{ max-width: 1180px; }
   }
 </style>
 </head>
@@ -302,15 +356,22 @@
       <div class="label">Painel de hoje</div>
       <div id="odometer" class="odometer zero">R$ 0,00</div>
       <div class="hero-grid">
-        <div class="stat"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Faturamento</div></div>
-        <div class="stat"><div class="n" id="s-gasto">R$ 0,00</div><div class="l">Gasto do dia</div></div>
-        <div class="stat"><div class="n" id="s-km">R$ 0,00</div><div class="l">Resultado por km</div></div>
-        <div class="stat"><div class="n" id="s-hora">R$ 0,00</div><div class="l">Produtividade</div></div>
+        <div class="stat p1"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Faturamento</div></div>
+        <div class="stat p2"><div class="n" id="s-gasto">R$ 0,00</div><div class="l">Gasto do dia</div></div>
+        <div class="stat p3"><div class="n" id="s-km">R$ 0,00</div><div class="l">R$/km</div></div>
+        <div class="stat p4"><div class="n" id="s-hora">R$ 0,00</div><div class="l">R$/hora</div></div>
       </div>
       <div class="turno-summary">
         <div class="turno-mini"><div class="tm-label">☀️ Manhã</div><div class="tm-amount" id="tm-manha-valor">R$ 0,00</div><div class="tm-time" id="tm-manha-tempo">0h 00min</div><div class="tm-prod" id="tm-manha-prod">—</div></div>
         <div class="turno-mini"><div class="tm-label">🍽️ Almoço</div><div class="tm-amount" id="tm-almoco-valor">R$ 0,00</div><div class="tm-time" id="tm-almoco-tempo">0h 00min</div><div class="tm-prod" id="tm-almoco-prod">—</div></div>
         <div class="turno-mini"><div class="tm-label">🌙 Noite</div><div class="tm-amount" id="tm-noite-valor">R$ 0,00</div><div class="tm-time" id="tm-noite-tempo">0h 00min</div><div class="tm-prod" id="tm-noite-prod">—</div></div>
+      </div>
+      <div id="mini-meta" class="mini-meta" style="display:none;">
+        <div class="mini-meta-row">
+          <span>Meta diária</span>
+          <span id="mini-meta-pct">0%</span>
+        </div>
+        <div class="progress-bar mini"><div id="mini-meta-bar" style="width:0%"></div></div>
       </div>
       <div class="sublabel">Custos fixos (lava jato, aluguel do carro etc.) não entram aqui — eles são descontados no resumo do mês.</div>
     </div>
@@ -420,7 +481,7 @@
       <h2>Dias do <span class="accent">mês</span></h2>
       <div id="tabela-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Bruto</th><th>Gasto</th><th>Result.</th><th>Km</th><th>R$/km</th><th>Horas</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Data</th><th>Bruto</th><th>Gasto</th><th>Result.</th><th>Km</th><th>R$/km</th><th>Horas</th><th></th></tr></thead>
           <tbody id="tabela-body"></tbody>
         </table>
         <div class="empty" id="mes-empty" style="display:none;">Nenhum dia registrado neste mês ainda.</div>
@@ -769,6 +830,15 @@
       $('tm-'+k+'-tempo').textContent = formatHM(tt);
       $('tm-'+k+'-prod').textContent = horasTurno>0 ? brl(ganhoTurno(tt)/horasTurno)+'/h' : '—';
     });
+
+    if(metaDiariaAtual > 0){
+      const pctMeta = Math.min(100, Math.max(0, (res/metaDiariaAtual)*100));
+      $('mini-meta').style.display = 'block';
+      $('mini-meta-pct').textContent = Math.round(pctMeta)+'%';
+      $('mini-meta-bar').style.width = pctMeta+'%';
+    } else {
+      $('mini-meta').style.display = 'none';
+    }
   }
 
   ['g-99','g-indrive','g-entregas','g-outros','d-combustivel','d-alimentacao','d-outros','d-litros','horas-h','horas-min','dia-km'].forEach(id=>{
@@ -796,6 +866,10 @@
     st.textContent = 'Salvo ✓ ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     st.classList.add('show');
     setTimeout(()=>st.classList.remove('show'), 2500);
+    const hero = document.querySelector('.hero');
+    hero.classList.remove('saved-pulse');
+    void hero.offsetWidth;
+    hero.classList.add('saved-pulse');
   });
 
   function formatDateBR(iso){
@@ -870,7 +944,11 @@
 
   async function renderMonth(){
     const [y,m] = $('input-month').value.split('-').map(Number);
+    document.querySelectorAll('#tab-mes .sc .n').forEach(el=>el.classList.add('skeleton'));
+    document.querySelectorAll('#tab-mes .chart-box canvas').forEach(el=>el.style.opacity='0.12');
     const { dates, daysInMonth, filled } = await getMonthEntries(y, m);
+    document.querySelectorAll('#tab-mes .sc .n').forEach(el=>el.classList.remove('skeleton'));
+    document.querySelectorAll('#tab-mes .chart-box canvas').forEach(el=>el.style.opacity='1');
 
     let bruto=0, gastoVar=0, litrosTotal=0, kmMes=0;
     const gastoPorCategoria = {combustivel:0, alimentacao:0, outros:0};
@@ -924,8 +1002,15 @@
         const km = kmTotal(entry), horas = horasTotal(entry);
         const rkm = km>0 ? r/km : 0;
         const [,, dd] = date.split('-');
+        let statusClass = 'neutro';
+        if(goals.daily > 0){
+          if(r >= goals.daily) statusClass = 'excelente';
+          else if(r >= goals.daily*0.7) statusClass = 'media';
+          else statusClass = 'abaixo';
+        }
         const tr = document.createElement('tr');
         tr.innerHTML = `
+          <td><span class="status-dot ${statusClass}"></span></td>
           <td>${dd}/${pad(m)}</td>
           <td>${brl(b)}</td>
           <td>${brl(g)}</td>
@@ -1067,8 +1152,10 @@
     const [y,m] = $('input-month').value.split('-').map(Number);
     const mesLabel = new Date(y, m-1, 1).toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
     $('est-mes-label').textContent = '— ' + mesLabel;
+    document.querySelectorAll('#tab-estatisticas .sc .n').forEach(el=>el.classList.add('skeleton'));
 
     const { filled } = await getMonthEntries(y, m);
+    document.querySelectorAll('#tab-estatisticas .sc .n').forEach(el=>el.classList.remove('skeleton'));
 
     if(filled.length === 0){
       $('est-empty').style.display = 'block';
@@ -1098,32 +1185,42 @@
 
     const melhorTurnoKey = Object.entries(turnoTotais).sort((a,b)=>b[1]-a[1])[0][0];
     const produtividadeAtual = somaHoras>0 ? somaResultado/somaHoras : 0;
+    const TURNO_FRASE = {manha:'pela manhã', almoco:'no almoço', noite:'à noite'};
 
-    // Insight 1: peso do melhor turno no faturamento
+    // Insight 1: quando você mais fatura
     const pctTurno = somaBruto>0 ? (turnoTotais[melhorTurnoKey]/somaBruto*100) : 0;
-    const insight1 = `${ICONE_TURNO[melhorTurnoKey]} <b>${TURNO_LABEL[melhorTurnoKey]}</b> representa <b>${pctTurno.toFixed(0)}%</b> do seu faturamento este mês.`;
+    const insight1 = `${ICONE_TURNO[melhorTurnoKey]} Você fatura mais <b>${TURNO_FRASE[melhorTurnoKey]}</b> — isso é <b>${pctTurno.toFixed(0)}%</b> do total do mês.`;
 
-    // Insight 2: produtividade vs mês anterior
+    // Insight 2: produtividade vs mês anterior, em tom de conversa
     let prevY = y, prevM = m - 1;
     if(prevM === 0){ prevM = 12; prevY = y - 1; }
     const { filled: filledPrev } = await getMonthEntries(prevY, prevM);
     let insight2;
     if(filledPrev.length === 0){
-      insight2 = `📊 Ainda não temos dados do mês anterior pra comparar sua produtividade.`;
+      insight2 = `📊 Esse é o seu primeiro mês com dados — em breve dá pra comparar sua evolução.`;
     } else {
       let somaResultadoPrev=0, somaHorasPrev=0;
       filledPrev.forEach(({entry})=>{ somaResultadoPrev += resultadoDia(entry); somaHorasPrev += horasTotal(entry); });
       const produtividadePrev = somaHorasPrev>0 ? somaResultadoPrev/somaHorasPrev : 0;
       if(produtividadePrev > 0){
         const diff = produtividadeAtual - produtividadePrev;
-        const sinal = diff >= 0 ? 'maior' : 'menor';
-        insight2 = `📈 Sua produtividade está <b>${brl(Math.abs(diff))}/h ${sinal}</b> que no mês passado (${brl(produtividadePrev)}/h → ${brl(produtividadeAtual)}/h).`;
+        if(Math.abs(diff) < 0.5){
+          insight2 = `📊 Sua produtividade está estável: <b>${brl(produtividadeAtual)}/h</b>, bem perto do mês passado.`;
+        } else if(diff >= 0){
+          insight2 = `📈 Sua produtividade subiu pra <b>${brl(produtividadeAtual)}/h</b> — <b>${brl(diff)}/h a mais</b> que no mês passado.`;
+        } else {
+          insight2 = `📉 Sua produtividade caiu pra <b>${brl(produtividadeAtual)}/h</b> — <b>${brl(Math.abs(diff))}/h a menos</b> que no mês passado.`;
+        }
       } else {
-        insight2 = `📊 Sem horas registradas no mês passado pra comparar produtividade.`;
+        insight2 = `📊 Sem horas registradas no mês passado pra comparar sua produtividade.`;
       }
     }
 
-    $('est-insights').innerHTML = `<div style="margin-bottom:10px;">${insight1}</div><div>${insight2}</div>`;
+    let insightsHtml = `<div style="margin-bottom:10px;">${insight1}</div><div>${insight2}</div>`;
+    if(goals.daily > 0){
+      insightsHtml += `<div style="margin-top:10px;">🎯 Você bateu sua meta em <b>${diasBateram} dos ${filled.length} dias</b> trabalhados.</div>`;
+    }
+    $('est-insights').innerHTML = insightsHtml;
 
     $('est-melhor-dia').textContent = `${formatDateBR(melhorDia.date)} — ${brl(melhorDia.valor)}`;
     $('est-pior-dia').textContent = `${formatDateBR(piorDia.date)} — ${brl(piorDia.valor)}`;
@@ -1135,6 +1232,7 @@
 
   // ---------- METAS ----------
   let unidadeAtual = 'litros';
+  let metaDiariaAtual = 0;
 
   function applyUnidadeLabels(){
     if(unidadeAtual === 'm3'){
@@ -1152,18 +1250,22 @@
     $('meta-mensal').value = g.monthly || '';
     $('dias-mes').value = g.diasMes || 22;
     unidadeAtual = g.unidadeCombustivel || 'litros';
+    metaDiariaAtual = g.daily || 0;
     $('unidade-combustivel').value = unidadeAtual;
     applyUnidadeLabels();
     updateSugestaoMensal();
+    updateHero();
   }
   $('btn-salvar-metas').addEventListener('click', async ()=>{
     const g = { daily: parseFloat($('meta-diaria').value)||0, monthly: parseFloat($('meta-mensal').value)||0, diasMes: parseInt($('dias-mes').value)||22 };
     await setGoals(g);
+    metaDiariaAtual = g.daily || 0;
     const st = $('save-status-metas');
     st.textContent = 'Salvo ✓';
     st.classList.add('show');
     setTimeout(()=>st.classList.remove('show'), 2000);
     renderMetasProgress();
+    updateHero();
   });
 
   $('btn-salvar-veiculo').addEventListener('click', async ()=>{
