@@ -195,6 +195,25 @@
   .turno-btn.active{ background: var(--amber); color:#1a1400; border-color: var(--amber); }
   .turno-btn:hover:not(.active){ border-color: var(--amber); color:var(--text); }
 
+  .confirm-overlay{
+    position:fixed; inset:0; background: rgba(0,0,0,0.65);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; padding:20px; backdrop-filter: blur(2px);
+  }
+  .confirm-box{
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border:1px solid var(--border); border-radius:18px;
+    padding:26px 24px; max-width:360px; width:100%;
+    text-align:center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: confirm-pop .15s ease-out;
+  }
+  @keyframes confirm-pop{ from{ transform: scale(0.92); opacity:0; } to{ transform: scale(1); opacity:1; } }
+  .confirm-icon{ font-size:32px; margin-bottom:10px; }
+  .confirm-title{ font-size:17px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .confirm-msg{ font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:22px; white-space:pre-line; }
+  .confirm-actions{ display:flex; gap:10px; }
+  .confirm-actions .btn{ flex:1; padding:11px 0; }
+
   section{ display:none; }
   section.active{ display:block; }
 
@@ -485,10 +504,43 @@
 
 </div>
 
+<div id="confirm-overlay" class="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title">Tem certeza?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn secondary" id="confirm-cancel">Cancelar</button>
+      <button class="btn danger" id="confirm-ok">Apagar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   const $ = id => document.getElementById(id);
   try{ firebase.firestore().enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
+
+  function customConfirm(mensagem, opcoes){
+    opcoes = opcoes || {};
+    return new Promise((resolve)=>{
+      $('confirm-title').textContent = opcoes.titulo || 'Tem certeza?';
+      $('confirm-msg').textContent = mensagem;
+      $('confirm-ok').textContent = opcoes.textoOk || 'Confirmar';
+      $('confirm-overlay').style.display = 'flex';
+
+      function limpar(resultado){
+        $('confirm-overlay').style.display = 'none';
+        $('confirm-ok').removeEventListener('click', onOk);
+        $('confirm-cancel').removeEventListener('click', onCancel);
+        resolve(resultado);
+      }
+      function onOk(){ limpar(true); }
+      function onCancel(){ limpar(false); }
+      $('confirm-ok').addEventListener('click', onOk);
+      $('confirm-cancel').addEventListener('click', onCancel);
+    });
+  }
   const pad = n => String(n).padStart(2,'0');
   const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
   const brl = n => (isFinite(n)?n:0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -717,8 +769,8 @@
   $('btn-limpar').addEventListener('click', async ()=>{
     const date = $('input-date').value;
     flushFormToCurrentTurno();
-    const resumo = `${brl(ganhoBruto(currentEntry))} de ganho e ${kmTotal(currentEntry)||0} km`;
-    const confirmado = confirm(`Apagar os dados de ${date}?\n\nVocê vai perder: ${resumo}\n\nEssa ação NÃO pode ser desfeita.`);
+    const resumo = `Você vai perder: ${brl(ganhoBruto(currentEntry))} de ganho e ${kmTotal(currentEntry)||0} km.\n\nEssa ação não pode ser desfeita.`;
+    const confirmado = await customConfirm(resumo, {titulo: `Apagar os dados de ${date}?`, textoOk: 'Apagar'});
     if(!confirmado) return;
     await deleteEntry(date);
     currentEntry = emptyEntry();
