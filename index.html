@@ -69,29 +69,29 @@
 
   .hero{
     background: linear-gradient(180deg, var(--card), var(--card-2));
-    border:1px solid var(--border); border-radius: 18px; padding: 22px 24px;
-    margin-bottom: 18px; position: relative; overflow:hidden;
+    border:1px solid var(--border); border-radius: 20px; padding: 26px 22px 22px;
+    margin-bottom: 18px; position: relative; overflow:hidden; text-align:center;
   }
   .hero::before{
     content:''; position:absolute; inset:0;
     background: repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 6px);
     pointer-events:none;
   }
-  .hero .label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
-  .hero .sublabel{ font-size:11.5px; color:var(--muted); margin-top:8px; }
+  .hero .label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:2.5px; margin-bottom:10px; font-weight:700; }
+  .hero .sublabel{ font-size:11.5px; color:var(--muted); margin-top:12px; }
   .odometer{
-    font-family:'JetBrains Mono', monospace; font-weight:800; font-size: 44px; letter-spacing: 1px;
-    background: #0e0f12; display:inline-block; padding: 10px 18px; border-radius: 10px;
-    border: 1px solid var(--border); box-shadow: inset 0 0 22px rgba(0,0,0,0.6); transition: color .2s;
+    font-family:'JetBrains Mono', monospace; font-weight:800; font-size: 56px; letter-spacing: 1px;
+    background: #0e0f12; display:block; width:100%; padding: 22px 10px; border-radius: 16px;
+    border: 1px solid var(--border); box-shadow: inset 0 0 30px rgba(0,0,0,0.65); transition: color .2s;
   }
-  .odometer.pos{ color: var(--green); text-shadow: 0 0 16px rgba(53,208,127,0.4); }
-  .odometer.neg{ color: var(--red); text-shadow: 0 0 16px rgba(255,93,93,0.35); }
-  .odometer.zero{ color: var(--amber); text-shadow: 0 0 16px rgba(242,183,5,0.3); }
+  .odometer.pos{ color: var(--green); text-shadow: 0 0 26px rgba(53,208,127,0.55); border-color: rgba(53,208,127,0.35); }
+  .odometer.neg{ color: var(--red); text-shadow: 0 0 26px rgba(255,93,93,0.5); border-color: rgba(255,93,93,0.35); }
+  .odometer.zero{ color: var(--amber); text-shadow: 0 0 26px rgba(242,183,5,0.45); border-color: rgba(242,183,5,0.35); }
 
-  .hero-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-top:18px; }
+  .hero-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-top:20px; text-align:left; }
   .stat{ background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
-  .stat .n{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:17px; }
-  .stat .l{ font-size:11px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px;}
+  .stat .n{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:15px; }
+  .stat .l{ font-size:10.5px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px;}
 
   .card{ background: var(--card); border:1px solid var(--border); border-radius:16px; padding: 18px 20px; margin-bottom: 16px; }
   .card h2{ font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:0 0 14px; font-weight:700;}
@@ -156,8 +156,13 @@
   .neg-txt{ color:var(--red); }
 
   .charts-grid{ display:grid; grid-template-columns: 1.4fr 1fr; gap:16px; margin-top:16px; }
-  .chart-box{ background: var(--card-2); border:1px solid var(--border); border-radius:12px; padding:14px; height:260px; }
+  .chart-box{ background: var(--card-2); border:1px solid var(--border); border-radius:12px; padding:14px; height:260px; position:relative; }
   .chart-box h3{ margin:0 0 8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .chart-empty-msg{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:30px; font-size:13px; color:var(--muted); background: var(--card-2);
+    border-radius:12px;
+  }
 
   .empty{ color:var(--muted); font-size:13px; padding: 20px 0; text-align:center; }
 
@@ -225,7 +230,7 @@
     .charts-grid{ grid-template-columns: 1fr; }
     .goal-inputs{ grid-template-columns: 1fr; }
     .add-cost-form{ grid-template-columns: 1fr; }
-    .odometer{ font-size:30px; }
+    .odometer{ font-size:38px; padding:16px 8px; }
     table{ font-size:11px; }
   }
 </style>
@@ -273,6 +278,7 @@
       <nav class="tabs">
         <button data-tab="hoje" class="active">Hoje</button>
         <button data-tab="mes">Este mês</button>
+        <button data-tab="estatisticas">Estatísticas</button>
         <button data-tab="fixos">Custos fixos</button>
         <button data-tab="metas">Metas</button>
       </nav>
@@ -295,10 +301,10 @@
       <div class="label">Resultado do dia selecionado</div>
       <div id="odometer" class="odometer zero">R$ 0,00</div>
       <div class="hero-grid">
-        <div class="stat"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Ganho bruto</div></div>
+        <div class="stat"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Faturamento</div></div>
         <div class="stat"><div class="n" id="s-gasto">R$ 0,00</div><div class="l">Gasto do dia</div></div>
         <div class="stat"><div class="n" id="s-km">R$ 0,00</div><div class="l">Resultado por km</div></div>
-        <div class="stat"><div class="n" id="s-hora">R$ 0,00</div><div class="l">Resultado por hora</div></div>
+        <div class="stat"><div class="n" id="s-hora">R$ 0,00</div><div class="l">Produtividade</div></div>
       </div>
       <div class="turno-summary">
         <div class="turno-mini"><div class="tm-label">☀️ Manhã</div><div class="tm-amount" id="tm-manha-valor">R$ 0,00</div><div class="tm-time" id="tm-manha-tempo">0h 00min</div></div>
@@ -383,7 +389,7 @@
       </div>
 
       <div class="summary-cards">
-        <div class="sc"><div class="l">Ganho bruto</div><div class="n" id="m-bruto">R$ 0,00</div></div>
+        <div class="sc"><div class="l">Faturamento</div><div class="n" id="m-bruto">R$ 0,00</div></div>
         <div class="sc red"><div class="l">Gastos do dia a dia</div><div class="n" id="m-gasto">R$ 0,00</div></div>
         <div class="sc red"><div class="l">Custos fixos do mês</div><div class="n" id="m-fixos">R$ 0,00</div></div>
         <div class="sc green"><div class="l">Lucro líquido real</div><div class="n" id="m-lucro">R$ 0,00</div></div>
@@ -403,8 +409,8 @@
       </div>
 
       <div class="charts-grid">
-        <div class="chart-box"><h3>Resultado operacional por dia</h3><canvas id="chart-dias"></canvas></div>
-        <div class="chart-box"><h3>Pra onde vai o dinheiro (mês)</h3><canvas id="chart-gastos"></canvas></div>
+        <div class="chart-box"><h3>Resultado operacional por dia</h3><canvas id="chart-dias"></canvas><div class="chart-empty-msg" id="chart-dias-empty" style="display:none;">Os gráficos aparecerão após o primeiro lançamento.</div></div>
+        <div class="chart-box"><h3>Pra onde vai o dinheiro (mês)</h3><canvas id="chart-gastos"></canvas><div class="chart-empty-msg" id="chart-gastos-empty" style="display:none;">Os gráficos aparecerão após o primeiro lançamento.</div></div>
       </div>
     </div>
 
@@ -416,6 +422,22 @@
           <tbody id="tabela-body"></tbody>
         </table>
         <div class="empty" id="mes-empty" style="display:none;">Nenhum dia registrado neste mês ainda.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ESTATÍSTICAS ================= -->
+  <section id="tab-estatisticas">
+    <div class="card">
+      <h2>Estatísticas <span class="accent" id="est-mes-label"></span></h2>
+      <div class="empty" id="est-empty" style="display:none;">As estatísticas aparecerão após o primeiro lançamento do mês.</div>
+      <div id="est-insights" class="tips" style="margin-bottom:16px; display:none;"></div>
+      <div id="est-grid" class="summary-cards" style="grid-template-columns: repeat(2,1fr);">
+        <div class="sc amber"><div class="l">Melhor turno</div><div class="n" id="est-melhor-turno" style="font-size:15px;">—</div></div>
+        <div class="sc"><div class="l">Produtividade média</div><div class="n" id="est-produtividade">—</div></div>
+        <div class="sc"><div class="l">Faturamento médio por dia</div><div class="n" id="est-media-faturamento">—</div></div>
+        <div class="sc"><div class="l">Dias trabalhados</div><div class="n" id="est-dias-trabalhados">—</div></div>
+        <div class="sc" style="grid-column: span 2;"><div class="l">Dias que bateram a meta diária</div><div class="n" id="est-dias-meta">—</div></div>
       </div>
     </div>
   </section>
@@ -667,6 +689,7 @@
       btn.classList.add('active');
       $('tab-'+btn.dataset.tab).classList.add('active');
       if(btn.dataset.tab === 'mes') renderMonth();
+      if(btn.dataset.tab === 'estatisticas') renderEstatisticas();
       if(btn.dataset.tab === 'fixos') renderFixedCosts();
       if(btn.dataset.tab === 'metas') renderMetasProgress();
     });
@@ -828,17 +851,20 @@
 
   let chartDias, chartGastos;
 
-  async function renderMonth(){
-    const [y,m] = $('input-month').value.split('-').map(Number);
+  async function getMonthEntries(y, m){
     const daysInMonth = new Date(y, m, 0).getDate();
     const dates = [];
     for(let d=1; d<=daysInMonth; d++) dates.push(`${y}-${pad(m)}-${pad(d)}`);
-
     const results = await Promise.all(dates.map(async date => {
       const raw = await getEntry(date);
       return {date, raw, entry: normalizeEntry(raw)};
     }));
-    const filled = results.filter(r => r.raw !== null);
+    return { dates, daysInMonth, filled: results.filter(r => r.raw !== null) };
+  }
+
+  async function renderMonth(){
+    const [y,m] = $('input-month').value.split('-').map(Number);
+    const { dates, daysInMonth, filled } = await getMonthEntries(y, m);
 
     let bruto=0, gastoVar=0, litrosTotal=0, kmMes=0;
     const gastoPorCategoria = {combustivel:0, alimentacao:0, outros:0};
@@ -880,6 +906,8 @@
     // table
     const tbody = $('tabela-body');
     tbody.innerHTML = '';
+    $('chart-dias-empty').style.display = filled.length===0 ? 'flex' : 'none';
+    $('chart-gastos-empty').style.display = filled.length===0 ? 'flex' : 'none';
     if(filled.length===0){
       $('mes-empty').style.display='block';
     } else {
@@ -962,6 +990,16 @@
   }
 
   // ---------- CUSTOS FIXOS ----------
+  function iconeCusto(nome){
+    const n = nome.toLowerCase();
+    if(n.includes('aluguel') || n.includes('carro')) return '🚗 ';
+    if(n.includes('lava') || n.includes('lavagem')) return '🧼 ';
+    if(n.includes('cabelo') || n.includes('barbeiro') || n.includes('salão')) return '✂️ ';
+    if(n.includes('internet') || n.includes('wifi') || n.includes('dados')) return '📶 ';
+    if(n.includes('youtube')) return '▶️ ';
+    return '';
+  }
+
   async function renderFixedCosts(){
     const list = await getFixedCosts();
     const now2 = new Date();
@@ -978,7 +1016,7 @@
         const eq = monthlyEquivalent(c, daysInMonth);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="font-family:'Inter';">${c.nome}</td>
+          <td style="font-family:'Inter';">${iconeCusto(c.nome)}${c.nome}</td>
           <td>${brl(c.valor)}</td>
           <td><span class="freq-tag ${c.freq}">${c.freq}</span></td>
           <td>${brl(eq)}</td>
@@ -1009,6 +1047,75 @@
     $('fc-nome').value=''; $('fc-valor').value='';
     renderFixedCosts();
   });
+
+  // ---------- ESTATÍSTICAS ----------
+  const ICONE_TURNO = {manha:'☀️', almoco:'🍽️', noite:'🌙'};
+
+  async function renderEstatisticas(){
+    const [y,m] = $('input-month').value.split('-').map(Number);
+    const mesLabel = new Date(y, m-1, 1).toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+    $('est-mes-label').textContent = '— ' + mesLabel;
+
+    const { filled } = await getMonthEntries(y, m);
+
+    if(filled.length === 0){
+      $('est-empty').style.display = 'block';
+      $('est-insights').style.display = 'none';
+      $('est-grid').style.display = 'none';
+      return;
+    }
+    $('est-empty').style.display = 'none';
+    $('est-insights').style.display = 'block';
+    $('est-grid').style.display = 'grid';
+
+    const goals = await getGoals();
+    const turnoTotais = {manha:0, almoco:0, noite:0};
+    let somaBruto=0, somaHoras=0, somaResultado=0, diasBateram=0;
+
+    filled.forEach(({entry})=>{
+      const r = resultadoDia(entry);
+      TURNOS.forEach(k=> turnoTotais[k] += ganhoTurno(entry.turnos[k]));
+      somaBruto += ganhoBruto(entry);
+      somaHoras += horasTotal(entry);
+      somaResultado += r;
+      if(goals.daily>0 && r >= goals.daily) diasBateram++;
+    });
+
+    const melhorTurnoKey = Object.entries(turnoTotais).sort((a,b)=>b[1]-a[1])[0][0];
+    const produtividadeAtual = somaHoras>0 ? somaResultado/somaHoras : 0;
+
+    // Insight 1: peso do melhor turno no faturamento
+    const pctTurno = somaBruto>0 ? (turnoTotais[melhorTurnoKey]/somaBruto*100) : 0;
+    const insight1 = `${ICONE_TURNO[melhorTurnoKey]} <b>${TURNO_LABEL[melhorTurnoKey]}</b> representa <b>${pctTurno.toFixed(0)}%</b> do seu faturamento este mês.`;
+
+    // Insight 2: produtividade vs mês anterior
+    let prevY = y, prevM = m - 1;
+    if(prevM === 0){ prevM = 12; prevY = y - 1; }
+    const { filled: filledPrev } = await getMonthEntries(prevY, prevM);
+    let insight2;
+    if(filledPrev.length === 0){
+      insight2 = `📊 Ainda não temos dados do mês anterior pra comparar sua produtividade.`;
+    } else {
+      let somaResultadoPrev=0, somaHorasPrev=0;
+      filledPrev.forEach(({entry})=>{ somaResultadoPrev += resultadoDia(entry); somaHorasPrev += horasTotal(entry); });
+      const produtividadePrev = somaHorasPrev>0 ? somaResultadoPrev/somaHorasPrev : 0;
+      if(produtividadePrev > 0){
+        const diff = produtividadeAtual - produtividadePrev;
+        const sinal = diff >= 0 ? 'maior' : 'menor';
+        insight2 = `📈 Sua produtividade está <b>${brl(Math.abs(diff))}/h ${sinal}</b> que no mês passado (${brl(produtividadePrev)}/h → ${brl(produtividadeAtual)}/h).`;
+      } else {
+        insight2 = `📊 Sem horas registradas no mês passado pra comparar produtividade.`;
+      }
+    }
+
+    $('est-insights').innerHTML = `<div style="margin-bottom:10px;">${insight1}</div><div>${insight2}</div>`;
+
+    $('est-melhor-turno').textContent = `${TURNO_LABEL[melhorTurnoKey]} — ${brl(turnoTotais[melhorTurnoKey])}`;
+    $('est-produtividade').textContent = somaHoras>0 ? brl(somaResultado/somaHoras)+'/h' : '—';
+    $('est-media-faturamento').textContent = brl(somaBruto/filled.length);
+    $('est-dias-trabalhados').textContent = filled.length;
+    $('est-dias-meta').textContent = goals.daily>0 ? `${diasBateram} de ${filled.length} dias` : 'Defina uma meta diária na aba Metas primeiro';
+  }
 
   // ---------- METAS ----------
   let unidadeAtual = 'litros';
