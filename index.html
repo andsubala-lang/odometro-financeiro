@@ -716,6 +716,10 @@
 
   $('btn-limpar').addEventListener('click', async ()=>{
     const date = $('input-date').value;
+    flushFormToCurrentTurno();
+    const resumo = `${brl(ganhoBruto(currentEntry))} de ganho e ${kmTotal(currentEntry)||0} km`;
+    const confirmado = confirm(`Apagar os dados de ${date}?\n\nVocê vai perder: ${resumo}\n\nEssa ação NÃO pode ser desfeita.`);
+    if(!confirmado) return;
     await deleteEntry(date);
     currentEntry = emptyEntry();
     currentTurno = 'manha';
