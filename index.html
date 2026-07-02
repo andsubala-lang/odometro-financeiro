@@ -182,6 +182,7 @@
   .turno-mini .tm-label{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
   .turno-mini .tm-amount{ font-family:'JetBrains Mono'; font-size:15px; font-weight:700; color:var(--text); }
   .turno-mini .tm-time{ font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); margin-top:3px; }
+  .turno-mini .tm-prod{ font-family:'JetBrains Mono'; font-size:11px; color:var(--amber); margin-top:2px; font-weight:600; }
 
   .time-input{
     background: var(--card-2); border:1px solid var(--border); color:var(--text);
@@ -298,7 +299,7 @@
   <section id="tab-hoje" class="active">
 
     <div class="hero">
-      <div class="label">Resultado do dia selecionado</div>
+      <div class="label">Painel de hoje</div>
       <div id="odometer" class="odometer zero">R$ 0,00</div>
       <div class="hero-grid">
         <div class="stat"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Faturamento</div></div>
@@ -307,9 +308,9 @@
         <div class="stat"><div class="n" id="s-hora">R$ 0,00</div><div class="l">Produtividade</div></div>
       </div>
       <div class="turno-summary">
-        <div class="turno-mini"><div class="tm-label">☀️ Manhã</div><div class="tm-amount" id="tm-manha-valor">R$ 0,00</div><div class="tm-time" id="tm-manha-tempo">0h 00min</div></div>
-        <div class="turno-mini"><div class="tm-label">🍽️ Almoço</div><div class="tm-amount" id="tm-almoco-valor">R$ 0,00</div><div class="tm-time" id="tm-almoco-tempo">0h 00min</div></div>
-        <div class="turno-mini"><div class="tm-label">🌙 Noite</div><div class="tm-amount" id="tm-noite-valor">R$ 0,00</div><div class="tm-time" id="tm-noite-tempo">0h 00min</div></div>
+        <div class="turno-mini"><div class="tm-label">☀️ Manhã</div><div class="tm-amount" id="tm-manha-valor">R$ 0,00</div><div class="tm-time" id="tm-manha-tempo">0h 00min</div><div class="tm-prod" id="tm-manha-prod">—</div></div>
+        <div class="turno-mini"><div class="tm-label">🍽️ Almoço</div><div class="tm-amount" id="tm-almoco-valor">R$ 0,00</div><div class="tm-time" id="tm-almoco-tempo">0h 00min</div><div class="tm-prod" id="tm-almoco-prod">—</div></div>
+        <div class="turno-mini"><div class="tm-label">🌙 Noite</div><div class="tm-amount" id="tm-noite-valor">R$ 0,00</div><div class="tm-time" id="tm-noite-tempo">0h 00min</div><div class="tm-prod" id="tm-noite-prod">—</div></div>
       </div>
       <div class="sublabel">Custos fixos (lava jato, aluguel do carro etc.) não entram aqui — eles são descontados no resumo do mês.</div>
     </div>
@@ -366,7 +367,7 @@
       </div>
 
       <div class="save-row">
-        <button class="btn" id="btn-salvar">Salvar dia</button>
+        <button class="btn" id="btn-salvar">Salvar turno</button>
         <button class="btn danger" id="btn-limpar-turno">Apagar este turno</button>
         <span class="save-status" id="save-status">Salvo ✓</span>
       </div>
@@ -401,6 +402,7 @@
       </div>
 
       <div class="progress-wrap">
+        <div class="section-sub" style="margin-bottom:8px;">Meta mensal</div>
         <div class="progress-bar"><div id="m-progress-bar" style="width:0%"></div></div>
         <div class="progress-label">
           <span id="m-progress-txt">R$ 0,00 de R$ 0,00 (meta mensal)</span>
@@ -433,11 +435,12 @@
       <div class="empty" id="est-empty" style="display:none;">As estatísticas aparecerão após o primeiro lançamento do mês.</div>
       <div id="est-insights" class="tips" style="margin-bottom:16px; display:none;"></div>
       <div id="est-grid" class="summary-cards" style="grid-template-columns: repeat(2,1fr);">
-        <div class="sc amber"><div class="l">Melhor turno</div><div class="n" id="est-melhor-turno" style="font-size:15px;">—</div></div>
-        <div class="sc"><div class="l">Produtividade média</div><div class="n" id="est-produtividade">—</div></div>
-        <div class="sc"><div class="l">Faturamento médio por dia</div><div class="n" id="est-media-faturamento">—</div></div>
-        <div class="sc"><div class="l">Dias trabalhados</div><div class="n" id="est-dias-trabalhados">—</div></div>
-        <div class="sc" style="grid-column: span 2;"><div class="l">Dias que bateram a meta diária</div><div class="n" id="est-dias-meta">—</div></div>
+        <div class="sc green"><div class="l">🏆 Melhor dia</div><div class="n" id="est-melhor-dia" style="font-size:15px;">—</div></div>
+        <div class="sc red"><div class="l">😞 Pior dia</div><div class="n" id="est-pior-dia" style="font-size:15px;">—</div></div>
+        <div class="sc amber"><div class="l">☀️ Melhor turno</div><div class="n" id="est-melhor-turno" style="font-size:15px;">—</div></div>
+        <div class="sc"><div class="l">📈 Produtividade média</div><div class="n" id="est-produtividade">—</div></div>
+        <div class="sc"><div class="l">💰 Resultado médio por dia</div><div class="n" id="est-media-resultado">—</div></div>
+        <div class="sc"><div class="l">🎯 Dias que bateram a meta</div><div class="n" id="est-dias-meta" style="font-size:15px;">—</div></div>
       </div>
     </div>
   </section>
@@ -469,6 +472,7 @@
       <div class="summary-cards" style="grid-template-columns: 1fr; margin-top:18px;">
         <div class="sc amber"><div class="l">Total de custos fixos por mês (estimado)</div><div class="n" id="fc-total" style="font-size:24px;">R$ 0,00</div></div>
       </div>
+      <div class="tips" id="fc-contexto" style="margin-top:12px; display:none;"></div>
     </div>
   </section>
 
@@ -760,8 +764,10 @@
 
     TURNOS.forEach(k=>{
       const tt = currentEntry.turnos[k];
+      const horasTurno = horasDecimalTurno(tt);
       $('tm-'+k+'-valor').textContent = brl(ganhoTurno(tt));
       $('tm-'+k+'-tempo').textContent = formatHM(tt);
+      $('tm-'+k+'-prod').textContent = horasTurno>0 ? brl(ganhoTurno(tt)/horasTurno)+'/h' : '—';
     });
   }
 
@@ -1034,6 +1040,12 @@
     }
     const total = list.reduce((acc,c)=> acc + monthlyEquivalent(c, daysInMonth), 0);
     $('fc-total').textContent = brl(total);
+    if(total > 0){
+      $('fc-contexto').style.display = 'block';
+      $('fc-contexto').innerHTML = `Você precisa faturar aproximadamente <b>${brl(total)}</b> por mês apenas para cobrir seus custos fixos — antes de qualquer lucro de verdade.`;
+    } else {
+      $('fc-contexto').style.display = 'none';
+    }
   }
 
   $('btn-add-custo').addEventListener('click', async ()=>{
@@ -1071,9 +1083,12 @@
     const goals = await getGoals();
     const turnoTotais = {manha:0, almoco:0, noite:0};
     let somaBruto=0, somaHoras=0, somaResultado=0, diasBateram=0;
+    let melhorDia=null, piorDia=null;
 
-    filled.forEach(({entry})=>{
+    filled.forEach(({date, entry})=>{
       const r = resultadoDia(entry);
+      if(!melhorDia || r > melhorDia.valor) melhorDia = {date, valor:r};
+      if(!piorDia || r < piorDia.valor) piorDia = {date, valor:r};
       TURNOS.forEach(k=> turnoTotais[k] += ganhoTurno(entry.turnos[k]));
       somaBruto += ganhoBruto(entry);
       somaHoras += horasTotal(entry);
@@ -1110,11 +1125,12 @@
 
     $('est-insights').innerHTML = `<div style="margin-bottom:10px;">${insight1}</div><div>${insight2}</div>`;
 
+    $('est-melhor-dia').textContent = `${formatDateBR(melhorDia.date)} — ${brl(melhorDia.valor)}`;
+    $('est-pior-dia').textContent = `${formatDateBR(piorDia.date)} — ${brl(piorDia.valor)}`;
     $('est-melhor-turno').textContent = `${TURNO_LABEL[melhorTurnoKey]} — ${brl(turnoTotais[melhorTurnoKey])}`;
     $('est-produtividade').textContent = somaHoras>0 ? brl(somaResultado/somaHoras)+'/h' : '—';
-    $('est-media-faturamento').textContent = brl(somaBruto/filled.length);
-    $('est-dias-trabalhados').textContent = filled.length;
-    $('est-dias-meta').textContent = goals.daily>0 ? `${diasBateram} de ${filled.length} dias` : 'Defina uma meta diária na aba Metas primeiro';
+    $('est-media-resultado').textContent = brl(somaResultado/filled.length);
+    $('est-dias-meta').textContent = goals.daily>0 ? `${diasBateram} de ${filled.length} dias` : 'Defina uma meta diária primeiro';
   }
 
   // ---------- METAS ----------
@@ -1160,14 +1176,25 @@
     setTimeout(()=>st.classList.remove('show'), 2000);
   });
 
-  function updateSugestaoMensal(){
+  async function updateSugestaoMensal(){
     const diaria = parseFloat($('meta-diaria').value)||0;
     const dias = parseInt($('dias-mes').value)||0;
     const box = $('sugestao-mensal');
     if(diaria<=0 || dias<=0){ box.style.display='none'; return; }
     const sugestao = diaria*dias;
+
+    const now3 = new Date();
+    const daysInMonth = new Date(now3.getFullYear(), now3.getMonth()+1, 0).getDate();
+    const fixedCosts = await getFixedCosts();
+    const totalFixos = fixedCosts.reduce((acc,c)=> acc + monthlyEquivalent(c, daysInMonth), 0);
+    const projecao = sugestao - totalFixos;
+
     box.style.display='block';
-    box.innerHTML = `Com sua meta diária de <b>${brl(diaria)}</b> e uns <b>${dias} dias</b> trabalhados no mês, uma meta mensal de referência seria <b>${brl(sugestao)}</b>. É só um cálculo pra te dar um norte — fique à vontade pra deixar em branco ou ajustar. <a href="#" id="usar-sugestao" style="color:var(--amber); font-weight:700;">Usar esse valor</a>`;
+    let html = `Com sua meta diária de <b>${brl(diaria)}</b> e uns <b>${dias} dias</b> trabalhados no mês, uma meta mensal de referência seria <b>${brl(sugestao)}</b>. É só um cálculo pra te dar um norte — fique à vontade pra deixar em branco ou ajustar. <a href="#" id="usar-sugestao" style="color:var(--amber); font-weight:700;">Usar esse valor</a>`;
+    if(totalFixos > 0){
+      html += `<br><br>Depois de descontar seus <b>${brl(totalFixos)}</b> de custos fixos cadastrados, a projeção de resultado é de aproximadamente <b style="color:${projecao>=0?'var(--green)':'var(--red)'};">${brl(projecao)}</b>.`;
+    }
+    box.innerHTML = html;
     $('usar-sugestao').addEventListener('click', (ev)=>{ ev.preventDefault(); $('meta-mensal').value = Math.round(sugestao); });
   }
   $('meta-diaria').addEventListener('input', updateSugestaoMensal);
