@@ -1,4 +1,4 @@
-const CACHE_NAME = 'odometro-financeiro-v18';
+const CACHE_NAME = 'odometro-financeiro-v19';
 const ASSETS = [
   './',
   './index.html',
