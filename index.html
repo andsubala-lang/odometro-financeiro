@@ -168,7 +168,22 @@
   .progress-label{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:5px; font-family:'JetBrains Mono'; }
 
   table{ width:100%; border-collapse: collapse; margin-top:6px; font-size:13px; min-width:600px; }
-  #tabela-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #tabela-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; display:none; }
+
+  .dias-lista{ display:block; }
+  .dia-card{ display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .dia-card:last-child{ border-bottom:none; }
+  .dia-card:hover{ background: rgba(255,255,255,0.02); }
+  .dia-card .dc-date{ font-family:'JetBrains Mono'; font-size:12.5px; color:var(--muted); width:38px; flex-shrink:0; }
+  .dia-card .dc-main{ flex:1; min-width:0; }
+  .dia-card .dc-result{ font-family:'JetBrains Mono'; font-weight:700; font-size:15px; }
+  .dia-card .dc-sub{ font-size:11px; color:var(--muted); margin-top:3px; font-family:'JetBrains Mono'; }
+  .dia-card .dc-arrow{ color:var(--muted); font-size:14px; flex-shrink:0; }
+
+  @media (min-width: 700px){
+    #tabela-wrap{ display:block; }
+    .dias-lista{ display:none; }
+  }
   thead th{ text-align:left; color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding: 6px 8px; border-bottom:1px solid var(--border); }
   tbody td{ padding: 9px 8px; border-bottom:1px solid var(--border); font-family:'JetBrains Mono'; }
   tbody tr:hover{ background: rgba(255,255,255,0.02); }
@@ -449,8 +464,9 @@
           <thead><tr><th></th><th>Data</th><th>Bruto</th><th>Gasto</th><th>Result.</th><th>Km</th><th>R$/km</th><th>Horas</th><th></th></tr></thead>
           <tbody id="tabela-body"></tbody>
         </table>
-        <div class="empty" id="mes-empty" style="display:none;">Nenhum dia registrado neste mês ainda.</div>
       </div>
+      <div id="dias-lista" class="dias-lista"></div>
+      <div class="empty" id="mes-empty" style="display:none;">Nenhum dia registrado neste mês ainda.</div>
     </div>
   </section>
 
@@ -866,7 +882,9 @@
 
     // table
     const tbody = $('tabela-body');
+    const listaMobile = $('dias-lista');
     tbody.innerHTML = '';
+    listaMobile.innerHTML = '';
     $('chart-dias-empty').style.display = filled.length===0 ? 'flex' : 'none';
     $('chart-gastos-empty').style.display = filled.length===0 ? 'flex' : 'none';
     if(filled.length===0){
@@ -898,12 +916,33 @@
           <td class="edit"><a data-date="${date}">editar</a></td>
         `;
         tbody.appendChild(tr);
+
+        const card = document.createElement('div');
+        card.className = 'dia-card';
+        card.dataset.date = date;
+        card.innerHTML = `
+          <span class="status-dot ${statusClass}"></span>
+          <div class="dc-date">${dd}/${pad(m)}</div>
+          <div class="dc-main">
+            <div class="dc-result ${r>=0?'pos-txt':'neg-txt'}">${brl(r)}</div>
+            <div class="dc-sub">Bruto ${brl(b)} · Gasto ${brl(g)} · ${km||0} km</div>
+          </div>
+          <div class="dc-arrow">›</div>
+        `;
+        listaMobile.appendChild(card);
       });
       tbody.querySelectorAll('a[data-date]').forEach(a=>{
         a.addEventListener('click', ()=>{
           document.querySelector('nav.tabs button[data-tab="hoje"]').click();
           $('input-date').value = a.dataset.date;
           loadDay(a.dataset.date);
+        });
+      });
+      listaMobile.querySelectorAll('.dia-card').forEach(card=>{
+        card.addEventListener('click', ()=>{
+          document.querySelector('nav.tabs button[data-tab="hoje"]').click();
+          $('input-date').value = card.dataset.date;
+          loadDay(card.dataset.date);
         });
       });
     }
