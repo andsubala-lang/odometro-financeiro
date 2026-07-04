@@ -107,7 +107,7 @@
   .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom: 14px; }
   .field{ display:flex; flex-direction:column; gap:5px; }
   .field label{ font-size:12px; color:var(--muted); }
-  input[type=date], input[type=month], input[type=text], select{
+  input[type=date], input[type=month], input[type=text], input[type=number], input[type=email], input[type=password], select{
     background: var(--card-2); border:1px solid var(--border); color:var(--text);
     padding:9px 12px; border-radius:9px; font-family:'JetBrains Mono'; font-size:13.5px;
   }
@@ -168,6 +168,7 @@
   .progress-label{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:5px; font-family:'JetBrains Mono'; }
 
   table{ width:100%; border-collapse: collapse; margin-top:6px; font-size:13px; min-width:600px; }
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   #tabela-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; display:none; }
 
   .dias-lista{ display:block; }
@@ -477,10 +478,10 @@
       <div class="empty" id="est-empty" style="display:none;">As estatísticas aparecerão após o primeiro lançamento do mês.</div>
       <div id="est-insights" class="tips" style="margin-bottom:16px; display:none;"></div>
       <div id="est-grid" class="summary-cards" style="grid-template-columns: repeat(2,1fr);">
-        <div class="sc green"><div class="l">🏆 Melhor dia</div><div class="n" id="est-melhor-dia" style="font-size:15px;">—</div></div>
-        <div class="sc red"><div class="l">😞 Pior dia</div><div class="n" id="est-pior-dia" style="font-size:15px;">—</div></div>
-        <div class="sc"><div class="l">📈 Produtividade média</div><div class="n" id="est-produtividade">—</div></div>
-        <div class="sc"><div class="l">💰 Resultado médio por dia</div><div class="n" id="est-media-resultado">—</div></div>
+        <div class="sc green"><div class="l">🏆 Melhor dia (faturamento)</div><div class="n" id="est-melhor-dia" style="font-size:15px;">—</div></div>
+        <div class="sc red"><div class="l">😞 Pior dia (faturamento)</div><div class="n" id="est-pior-dia" style="font-size:15px;">—</div></div>
+        <div class="sc"><div class="l">📈 Produtividade média (R$/h bruto)</div><div class="n" id="est-produtividade">—</div></div>
+        <div class="sc"><div class="l">💰 Resultado líquido médio por dia</div><div class="n" id="est-media-resultado">—</div></div>
         <div class="sc amber" style="grid-column: span 2;"><div class="l">🎯 Dias que bateram a meta</div><div class="n" id="est-dias-meta" style="font-size:15px;">—</div></div>
       </div>
     </div>
@@ -504,10 +505,12 @@
         <button class="btn" id="btn-add-custo">Adicionar</button>
       </div>
 
-      <table>
-        <thead><tr><th>Custo</th><th>Valor</th><th>Frequência</th><th>Equiv. mensal</th><th></th></tr></thead>
-        <tbody id="fixos-body"></tbody>
-      </table>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Custo</th><th>Valor</th><th>Frequência</th><th>Equiv. mensal</th><th></th></tr></thead>
+          <tbody id="fixos-body"></tbody>
+        </table>
+      </div>
       <div class="empty" id="fixos-empty" style="display:none;">Nenhum custo fixo cadastrado ainda.</div>
 
       <div class="summary-cards" style="grid-template-columns: 1fr; margin-top:18px;">
@@ -1088,15 +1091,15 @@
     filled.forEach(({date, entry})=>{
       const r = resultadoDia(entry);
       const b = ganhoBruto(entry);
-      if(!melhorDia || r > melhorDia.valor) melhorDia = {date, valor:r};
-      if(!piorDia || r < piorDia.valor) piorDia = {date, valor:r};
+      if(!melhorDia || b > melhorDia.valor) melhorDia = {date, valor:b};
+      if(!piorDia || b < piorDia.valor) piorDia = {date, valor:b};
       somaBruto += b;
       somaHoras += horasTotal(entry);
       somaResultado += r;
       if(goals.daily>0 && b >= goals.daily) diasBateram++;
     });
 
-    const produtividadeAtual = somaHoras>0 ? somaResultado/somaHoras : 0;
+    const produtividadeAtual = somaHoras>0 ? somaBruto/somaHoras : 0;
 
     // Insight: produtividade vs mês anterior, em tom de conversa
     let prevY = y, prevM = m - 1;
@@ -1106,9 +1109,9 @@
     if(filledPrev.length === 0){
       insight1 = `📊 Esse é o seu primeiro mês com dados — em breve dá pra comparar sua evolução.`;
     } else {
-      let somaResultadoPrev=0, somaHorasPrev=0;
-      filledPrev.forEach(({entry})=>{ somaResultadoPrev += resultadoDia(entry); somaHorasPrev += horasTotal(entry); });
-      const produtividadePrev = somaHorasPrev>0 ? somaResultadoPrev/somaHorasPrev : 0;
+      let somaBrutoPrev=0, somaHorasPrev=0;
+      filledPrev.forEach(({entry})=>{ somaBrutoPrev += ganhoBruto(entry); somaHorasPrev += horasTotal(entry); });
+      const produtividadePrev = somaHorasPrev>0 ? somaBrutoPrev/somaHorasPrev : 0;
       if(produtividadePrev > 0){
         const diff = produtividadeAtual - produtividadePrev;
         if(Math.abs(diff) < 0.5){
@@ -1131,7 +1134,7 @@
 
     $('est-melhor-dia').textContent = `${formatDateBR(melhorDia.date)} — ${brl(melhorDia.valor)}`;
     $('est-pior-dia').textContent = `${formatDateBR(piorDia.date)} — ${brl(piorDia.valor)}`;
-    $('est-produtividade').textContent = somaHoras>0 ? brl(somaResultado/somaHoras)+'/h' : '—';
+    $('est-produtividade').textContent = somaHoras>0 ? brl(produtividadeAtual)+'/h' : '—';
     $('est-media-resultado').textContent = brl(somaResultado/filled.length);
     $('est-dias-meta').textContent = goals.daily>0 ? `${diasBateram} de ${filled.length} dias` : 'Defina uma meta diária primeiro';
   }
