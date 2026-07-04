@@ -424,10 +424,6 @@
         <div class="sc green"><div class="l">Lucro líquido real</div><div class="n" id="m-lucro">R$ 0,00</div></div>
       </div>
 
-      <div class="summary-cards" style="grid-template-columns: 1fr;">
-        <div class="sc amber"><div class="l">Custo operacional por km</div><div class="n" id="m-custokm">R$ 0,00</div></div>
-      </div>
-      <div style="font-size:11px; color:var(--muted); margin:-8px 0 16px;">Quanto cada km rodado te custa: (gastos do dia a dia + custos fixos do mês) ÷ km total rodado. É diferente do "R$/km" — aquele é quanto você fatura por km; este é quanto custa pra rodar.</div>
 
       <div class="progress-wrap">
         <div class="section-sub" style="margin-bottom:8px;">Meta mensal</div>
@@ -858,8 +854,6 @@
     $('m-fixos').textContent = brl(totalFixos);
     $('m-lucro').textContent = brl(lucroReal);
 
-    const custoPorKm = kmMes>0 ? (gastoVar+totalFixos)/kmMes : 0;
-    $('m-custokm').textContent = kmMes>0 ? brl(custoPorKm) : '—';
 
     const goals = await getGoals();
     const metaMensal = (goals.daily>0 && goals.diasMes>0) ? goals.daily * goals.diasMes : 0;
