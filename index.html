@@ -337,6 +337,7 @@
     <div class="hero">
       <div class="label">Painel de hoje</div>
       <div id="odometer" class="odometer zero">R$ 0,00</div>
+      <div style="font-size:11px; color:var(--muted); margin-top:8px;">Faturamento − gastos do dia. Se você não lançou gasto ainda, os dois números batem igual.</div>
       <div class="hero-grid">
         <div class="stat p1"><div class="n" id="s-bruto">R$ 0,00</div><div class="l">Faturamento</div></div>
         <div class="stat p2"><div class="n" id="s-gasto">R$ 0,00</div><div class="l">Gasto do dia</div></div>
@@ -507,12 +508,9 @@
       <h2>Suas <span class="accent">metas</span></h2>
       <div class="goal-inputs">
         <div class="money-field"><label>Meta de faturamento diário</label><div class="inputwrap"><span class="prefix">R$</span><input type="number" min="0" step="1" id="meta-diaria" placeholder="0,00"></div></div>
-        <div class="money-field"><label>Meta de faturamento mensal (opcional)</label><div class="inputwrap"><span class="prefix">R$</span><input type="number" min="0" step="1" id="meta-mensal" placeholder="deixe em branco se não souber ainda"></div></div>
-      </div>
-      <div class="row" style="margin-top:-6px;">
-        <div class="field" style="width:220px;">
+        <div class="field">
           <label>Dias que pretende trabalhar por mês</label>
-          <input type="number" min="1" max="31" step="1" id="dias-mes" value="22">
+          <input type="number" min="1" max="31" step="1" id="dias-mes" value="22" style="margin-top:5px; padding:10px 12px;">
         </div>
       </div>
       <div class="tips" id="sugestao-mensal" style="margin-bottom:16px; display:none;"></div>
@@ -521,20 +519,10 @@
     </div>
 
     <div class="card">
-      <h2>Progresso de <span class="accent">hoje</span></h2>
-      <div class="progress-wrap">
-        <div class="progress-bar"><div id="hoje-progress-bar" style="width:0%"></div></div>
-        <div class="progress-label">
-          <span id="hoje-progress-txt">R$ 0,00 de R$ 0,00</span>
-          <span id="hoje-progress-pct">0%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
       <h2>Como <span class="accent">ler os números</span></h2>
       <div class="tips">
         <b>Sua meta é sobre faturamento (bruto)</b>, não sobre o que sobra depois dos gastos do dia — assim você já planeja o custo do combustível separadamente, do seu jeito.<br><br>
+        <b>A meta mensal é automática</b>: meta diária × dias que você marcar aqui. Ela aparece na barrinha de progresso da aba "Este mês".<br><br>
         <b>Lucro líquido real do mês</b> é o que sobra depois de tirar os gastos do dia a dia e também os custos fixos (aluguel do carro, lava jato, internet etc.) — esse é o número que mais importa pra saber se vale a pena no fim das contas.<br><br>
         <b>R$/hora</b> ajuda a comparar se vale mais rodar num horário ou aceitar uma corrida/entrega específica, mesmo em apps diferentes (99, InDrive, entregas).
       </div>
@@ -700,7 +688,6 @@
       if(btn.dataset.tab === 'mes') renderMonth();
       if(btn.dataset.tab === 'estatisticas') renderEstatisticas();
       if(btn.dataset.tab === 'fixos') renderFixedCosts();
-      if(btn.dataset.tab === 'metas') renderMetasProgress();
     });
   });
 
@@ -874,7 +861,7 @@
     $('m-custokm').textContent = kmMes>0 ? brl(custoPorKm) : '—';
 
     const goals = await getGoals();
-    const metaMensal = goals.monthly || 0;
+    const metaMensal = (goals.daily>0 && goals.diasMes>0) ? goals.daily * goals.diasMes : 0;
     const pct = metaMensal>0 ? Math.min(100, Math.max(0,(bruto/metaMensal)*100)) : 0;
     $('m-progress-bar').style.width = pct+'%';
     $('m-progress-txt').textContent = `${brl(bruto)} de ${brl(metaMensal)} (meta mensal)`;
@@ -1119,21 +1106,19 @@
   async function loadGoalsForm(){
     const g = await getGoals();
     $('meta-diaria').value = g.daily || '';
-    $('meta-mensal').value = g.monthly || '';
     $('dias-mes').value = g.diasMes || 22;
     metaDiariaAtual = g.daily || 0;
     updateSugestaoMensal();
     updateHero();
   }
   $('btn-salvar-metas').addEventListener('click', async ()=>{
-    const g = { daily: parseFloat($('meta-diaria').value)||0, monthly: parseFloat($('meta-mensal').value)||0, diasMes: parseInt($('dias-mes').value)||22 };
+    const g = { daily: parseFloat($('meta-diaria').value)||0, diasMes: parseInt($('dias-mes').value)||22 };
     await setGoals(g);
     metaDiariaAtual = g.daily || 0;
     const st = $('save-status-metas');
     st.textContent = 'Salvo ✓';
     st.classList.add('show');
     setTimeout(()=>st.classList.remove('show'), 2000);
-    renderMetasProgress();
     updateHero();
   });
 
@@ -1142,35 +1127,23 @@
     const dias = parseInt($('dias-mes').value)||0;
     const box = $('sugestao-mensal');
     if(diaria<=0 || dias<=0){ box.style.display='none'; return; }
-    const sugestao = diaria*dias;
+    const metaMensal = diaria*dias;
 
     const now3 = new Date();
     const daysInMonth = new Date(now3.getFullYear(), now3.getMonth()+1, 0).getDate();
     const fixedCosts = await getFixedCosts();
     const totalFixos = fixedCosts.reduce((acc,c)=> acc + monthlyEquivalent(c, daysInMonth), 0);
-    const projecao = sugestao - totalFixos;
+    const projecao = metaMensal - totalFixos;
 
     box.style.display='block';
-    let html = `Com sua meta diária de <b>${brl(diaria)}</b> e uns <b>${dias} dias</b> trabalhados no mês, uma meta mensal de referência seria <b>${brl(sugestao)}</b>. É só um cálculo pra te dar um norte — fique à vontade pra deixar em branco ou ajustar. <a href="#" id="usar-sugestao" style="color:var(--amber); font-weight:700;">Usar esse valor</a>`;
+    let html = `Com sua meta diária de <b>${brl(diaria)}</b> e <b>${dias} dias</b> trabalhados no mês, sua meta mensal (automática) é <b>${brl(metaMensal)}</b> — é essa que aparece na barrinha da aba "Este mês".`;
     if(totalFixos > 0){
       html += `<br><br>Depois de descontar seus <b>${brl(totalFixos)}</b> de custos fixos cadastrados, a projeção de resultado é de aproximadamente <b style="color:${projecao>=0?'var(--green)':'var(--red)'};">${brl(projecao)}</b>.`;
     }
     box.innerHTML = html;
-    $('usar-sugestao').addEventListener('click', (ev)=>{ ev.preventDefault(); $('meta-mensal').value = Math.round(sugestao); });
   }
   $('meta-diaria').addEventListener('input', updateSugestaoMensal);
   $('dias-mes').addEventListener('input', updateSugestaoMensal);
-
-  async function renderMetasProgress(){
-    const g = await getGoals();
-    flushForm();
-    const bruto = ganhoBruto(currentEntry);
-    const metaDiaria = g.daily || 0;
-    const pct = metaDiaria>0 ? Math.min(100, Math.max(0,(bruto/metaDiaria)*100)) : 0;
-    $('hoje-progress-bar').style.width = pct+'%';
-    $('hoje-progress-txt').textContent = `${brl(bruto)} de ${brl(metaDiaria)}`;
-    $('hoje-progress-pct').textContent = Math.round(pct)+'%';
-  }
 
   // ---------- AUTENTICAÇÃO ----------
   let modoCadastro = false;
