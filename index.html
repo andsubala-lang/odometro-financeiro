@@ -335,7 +335,7 @@
   <section id="tab-hoje" class="active">
 
     <div class="hero">
-      <div class="label">Painel de hoje</div>
+      <div class="label">Lucro líquido diário</div>
       <div id="odometer" class="odometer zero">R$ 0,00</div>
       <div style="font-size:11px; color:var(--muted); margin-top:8px;">Faturamento − gastos do dia. Se você não lançou gasto ainda, os dois números batem igual.</div>
       <div class="hero-grid">
@@ -425,8 +425,9 @@
       </div>
 
       <div class="summary-cards" style="grid-template-columns: 1fr;">
-        <div class="sc amber"><div class="l">Custo por km rodado</div><div class="n" id="m-custokm">R$ 0,00</div></div>
+        <div class="sc amber"><div class="l">Custo operacional por km</div><div class="n" id="m-custokm">R$ 0,00</div></div>
       </div>
+      <div style="font-size:11px; color:var(--muted); margin:-8px 0 16px;">Quanto cada km rodado te custa: (gastos do dia a dia + custos fixos do mês) ÷ km total rodado. É diferente do "R$/km" — aquele é quanto você fatura por km; este é quanto custa pra rodar.</div>
 
       <div class="progress-wrap">
         <div class="section-sub" style="margin-bottom:8px;">Meta mensal</div>
@@ -725,8 +726,8 @@
     flushForm();
     const bruto = ganhoBruto(currentEntry), gasto = gastoDia(currentEntry), res = resultadoDia(currentEntry);
     const km = kmTotal(currentEntry), horas = horasTotal(currentEntry);
-    const rkm = km>0 ? res/km : 0;
-    const rh = horas>0 ? res/horas : 0;
+    const rkm = km>0 ? bruto/km : 0;
+    const rh = horas>0 ? bruto/horas : 0;
     $('odometer').textContent = brl(res);
     $('odometer').classList.remove('pos','neg','zero');
     $('odometer').classList.add(res>0?'pos':(res<0?'neg':'zero'));
@@ -880,7 +881,7 @@
       filled.forEach(({date, entry})=>{
         const b = ganhoBruto(entry), g = gastoDia(entry), r = resultadoDia(entry);
         const km = kmTotal(entry), horas = horasTotal(entry);
-        const rkm = km>0 ? r/km : 0;
+        const rkm = km>0 ? b/km : 0;
         const [,, dd] = date.split('-');
         let statusClass = 'neutro';
         if(goals.daily > 0){
