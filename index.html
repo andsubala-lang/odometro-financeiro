@@ -203,6 +203,12 @@
     border-radius:12px;
   }
 
+  .gastos-lista{ display:grid; grid-template-columns: repeat(2,1fr); gap:8px 16px; margin-top:14px; }
+  .gastos-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--border); }
+  .gastos-item .gi-nome{ display:flex; align-items:center; gap:7px; color:var(--muted); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gastos-item .gi-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .gastos-item .gi-valor{ font-family:'JetBrains Mono'; font-weight:600; flex-shrink:0; }
+
   .empty{ color:var(--muted); font-size:13px; padding: 20px 0; text-align:center; }
 
   .tips{ background: rgba(242,183,5,0.06); border:1px solid rgba(242,183,5,0.25); border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.6; color: #d9d3c2; }
@@ -270,6 +276,7 @@
     .add-cost-form{ grid-template-columns: 1fr; }
     .odometer{ font-size:38px; padding:16px 8px; }
     table{ font-size:11px; }
+    .gastos-lista{ grid-template-columns: 1fr; }
   }
 
   @media (max-width: 360px){
@@ -456,6 +463,7 @@
         <div class="chart-box"><h3>Resultado operacional por dia</h3><canvas id="chart-dias"></canvas><div class="chart-empty-msg" id="chart-dias-empty" style="display:none;">Os gráficos aparecerão após o primeiro lançamento.</div></div>
         <div class="chart-box"><h3>Pra onde vai o dinheiro (mês)</h3><canvas id="chart-gastos"></canvas><div class="chart-empty-msg" id="chart-gastos-empty" style="display:none;">Os gráficos aparecerão após o primeiro lançamento.</div></div>
       </div>
+      <div id="gastos-lista" class="gastos-lista"></div>
     </div>
 
     <div class="card">
@@ -997,6 +1005,18 @@
         }
       }
     });
+
+    const listaGastos = $('gastos-lista');
+    if(breakdown.length === 0){
+      listaGastos.innerHTML = '';
+    } else {
+      listaGastos.innerHTML = breakdown.map((d,i)=>`
+        <div class="gastos-item">
+          <span class="gi-nome"><span class="gi-dot" style="background:${palette[i%palette.length]}"></span>${d.label}</span>
+          <span class="gi-valor">${brl(d.value)}</span>
+        </div>
+      `).join('');
+    }
   }
 
   // ---------- CUSTOS FIXOS ----------
