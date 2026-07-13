@@ -958,53 +958,16 @@
       });
     }
 
-    // charts
-    const dayLabels = dates.map(d=>d.split('-')[2]);
-    if(chartDias) chartDias.destroy();
-    chartDias = new Chart($('chart-dias'), {
-      type:'bar',
-      data:{ labels: dayLabels, datasets:[{
-        data: resultadoPorDia,
-        backgroundColor: resultadoPorDia.map(v=> v>=0 ? 'rgba(53,208,127,0.75)' : 'rgba(255,93,93,0.75)'),
-        borderRadius: 3, barThickness: 8
-      }]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => brl(ctx.raw) } } },
-        scales:{
-          x:{ ticks:{ color:'#8b8f98', font:{size:10} }, grid:{ display:false } },
-          y:{ ticks:{ color:'#8b8f98', font:{size:10}, callback:v=>'R$'+v }, grid:{ color:'#2e323c' } }
-        }
-      }
-    });
-
+    // Calcula o detalhamento e monta a lista de texto ANTES dos gráficos —
+    // assim, mesmo se o Chart.js falhar (bloqueador de anúncios, firewall etc.),
+    // a lista continua aparecendo normalmente.
+    const palette = ['#f2b705','#ff5d5d','#5b9df2','#35d07f','#c77dff','#ff9f4a','#8b8f98','#4ad1d1','#e879a8','#a3d95b'];
     const breakdown = [
       {label:'Combustível', value: gastoPorCategoria.combustivel},
       {label:'Alimentação', value: gastoPorCategoria.alimentacao},
       {label:'Outros (dia a dia)', value: gastoPorCategoria.outros},
       ...fixedCosts.map(c => ({label:c.nome, value: monthlyEquivalent(c, daysInMonth)}))
     ].filter(d => d.value > 0);
-
-    const palette = ['#f2b705','#ff5d5d','#5b9df2','#35d07f','#c77dff','#ff9f4a','#8b8f98','#4ad1d1','#e879a8','#a3d95b'];
-    if(chartGastos) chartGastos.destroy();
-    chartGastos = new Chart($('chart-gastos'), {
-      type:'doughnut',
-      data:{
-        labels: breakdown.length? breakdown.map(d=>d.label) : ['Sem gastos'],
-        datasets:[{
-          data: breakdown.length? breakdown.map(d=>d.value) : [1],
-          backgroundColor: breakdown.length? breakdown.map((_,i)=>palette[i%palette.length]) : ['#2e323c'],
-          borderColor: '#1c1f26', borderWidth: 2
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{
-          legend:{ position:'bottom', labels:{ color:'#8b8f98', font:{size:9}, boxWidth:9, padding:7 } },
-          tooltip:{ enabled: breakdown.length>0, callbacks:{ label: ctx => ctx.label+': '+brl(ctx.raw) } }
-        }
-      }
-    });
 
     const listaGastos = $('gastos-lista');
     if(breakdown.length === 0){
@@ -1017,6 +980,50 @@
         </div>
       `).join('');
     }
+
+    // charts (protegidos: se o Chart.js falhar, o resto da tela continua funcionando)
+    try{
+      const dayLabels = dates.map(d=>d.split('-')[2]);
+      if(chartDias) chartDias.destroy();
+      chartDias = new Chart($('chart-dias'), {
+        type:'bar',
+        data:{ labels: dayLabels, datasets:[{
+          data: resultadoPorDia,
+          backgroundColor: resultadoPorDia.map(v=> v>=0 ? 'rgba(53,208,127,0.75)' : 'rgba(255,93,93,0.75)'),
+          borderRadius: 3, barThickness: 8
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => brl(ctx.raw) } } },
+          scales:{
+            x:{ ticks:{ color:'#8b8f98', font:{size:10} }, grid:{ display:false } },
+            y:{ ticks:{ color:'#8b8f98', font:{size:10}, callback:v=>'R$'+v }, grid:{ color:'#2e323c' } }
+          }
+        }
+      });
+    }catch(e){ console.error('Falha ao criar gráfico de dias:', e); }
+
+    try{
+      if(chartGastos) chartGastos.destroy();
+      chartGastos = new Chart($('chart-gastos'), {
+        type:'doughnut',
+        data:{
+          labels: breakdown.length? breakdown.map(d=>d.label) : ['Sem gastos'],
+          datasets:[{
+            data: breakdown.length? breakdown.map(d=>d.value) : [1],
+            backgroundColor: breakdown.length? breakdown.map((_,i)=>palette[i%palette.length]) : ['#2e323c'],
+            borderColor: '#1c1f26', borderWidth: 2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{ position:'bottom', labels:{ color:'#8b8f98', font:{size:9}, boxWidth:9, padding:7 } },
+            tooltip:{ enabled: breakdown.length>0, callbacks:{ label: ctx => ctx.label+': '+brl(ctx.raw) } }
+          }
+        }
+      });
+    }catch(e){ console.error('Falha ao criar gráfico de gastos:', e); }
   }
 
   // ---------- CUSTOS FIXOS ----------
