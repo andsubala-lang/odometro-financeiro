@@ -547,6 +547,16 @@
     </div>
 
     <div class="card">
+      <h2>Lembrete por <span class="accent">notificação</span></h2>
+      <p class="desc">Ative pra receber um aviso no celular às 22h nos dias que você ainda não lançou nada — mesmo com o app fechado.</p>
+      <div class="save-row">
+        <button class="btn" id="btn-ativar-push">Ativar lembrete</button>
+        <button class="btn secondary" id="btn-desativar-push" style="display:none;">Desativar lembrete</button>
+      </div>
+      <div id="push-status" style="font-size:12.5px; color:var(--muted); margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
       <h2>Como <span class="accent">ler os números</span></h2>
       <div class="tips">
         <b>Sua meta é sobre faturamento (bruto)</b>, não sobre o que sobra depois dos gastos do dia — assim você já planeja o custo do combustível separadamente, do seu jeito.<br><br>
@@ -1290,6 +1300,86 @@
     }
   }
 
+  // ---------- LEMBRETE POR NOTIFICAÇÃO (Web Push) ----------
+  const VAPID_PUBLIC_KEY = 'BAylfs_9Alp14gUNnx8Ajo9rJeVTR2JMKfz8BbmlN3Idl56Chlv0O574w1txT-HvuDNJ9O1vQkvIDUwVrS747S8';
+
+  function urlBase64ToUint8Array(base64String){
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(c=>c.charCodeAt(0)));
+  }
+
+  async function getSubscriptionDoc(){
+    const u = uid(); if(!u) return null;
+    try{
+      const doc = await db().collection('users').doc(u).collection('meta').doc('pushSubscription').get();
+      return doc.exists ? doc.data() : null;
+    }catch(e){ return null; }
+  }
+
+  async function atualizarStatusPush(){
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+      $('push-status').textContent = 'Seu navegador não suporta esse tipo de notificação.';
+      $('btn-ativar-push').disabled = true;
+      return;
+    }
+    const salvo = await getSubscriptionDoc();
+    if(salvo){
+      $('btn-ativar-push').style.display = 'none';
+      $('btn-desativar-push').style.display = 'inline-block';
+      $('push-status').textContent = 'Lembrete ativado ✓ Você recebe um aviso às 22h nos dias sem lançamento.';
+    } else {
+      $('btn-ativar-push').style.display = 'inline-block';
+      $('btn-desativar-push').style.display = 'none';
+      $('push-status').textContent = '';
+    }
+  }
+
+  $('btn-ativar-push').addEventListener('click', async ()=>{
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+      $('push-status').textContent = 'Seu navegador não suporta esse tipo de notificação.';
+      return;
+    }
+    $('push-status').textContent = 'Ativando...';
+    try{
+      const permission = await Notification.requestPermission();
+      if(permission !== 'granted'){
+        $('push-status').textContent = 'Permissão negada. Se mudar de ideia, ative notificações pra este site nas configurações do navegador.';
+        return;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if(!sub){
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+      }
+      const u = uid();
+      if(u){
+        await db().collection('users').doc(u).collection('meta').doc('pushSubscription').set(JSON.parse(JSON.stringify(sub)));
+      }
+      await atualizarStatusPush();
+    }catch(e){
+      console.error(e);
+      $('push-status').textContent = 'Não foi possível ativar agora. Tenta de novo em alguns instantes.';
+    }
+  });
+
+  $('btn-desativar-push').addEventListener('click', async ()=>{
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if(sub) await sub.unsubscribe();
+    }catch(e){}
+    const u = uid();
+    if(u){
+      try{ await db().collection('users').doc(u).collection('meta').doc('pushSubscription').delete(); }catch(e){}
+    }
+    await atualizarStatusPush();
+  });
+
   firebase.auth().onAuthStateChanged(async (user)=>{
     if(user){
       $('auth-screen').style.display = 'none';
@@ -1299,6 +1389,7 @@
       await loadGoalsForm();
       await getFixedCosts();
       await checkLembrete();
+      await atualizarStatusPush();
     } else {
       $('app-content').style.display = 'none';
       $('auth-screen').style.display = 'block';

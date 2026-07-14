@@ -1,4 +1,4 @@
-const CACHE_NAME = 'odometro-financeiro-v25';
+const CACHE_NAME = 'odometro-financeiro-v26';
 const ASSETS = [
   './',
   './index.html',
@@ -34,6 +34,31 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).catch(() => caches.match('./index.html'));
+    })
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let data = { title: 'Odômetro Financeiro', body: 'Você ainda não lançou nada hoje.' };
+  try{ if(event.data) data = event.data.json(); }catch(e){}
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      tag: 'lembrete-diario'
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if ('focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow('./');
     })
   );
 });
