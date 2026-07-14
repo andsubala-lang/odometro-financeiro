@@ -552,6 +552,7 @@
       <div class="save-row">
         <button class="btn" id="btn-ativar-push">Ativar lembrete</button>
         <button class="btn secondary" id="btn-desativar-push" style="display:none;">Desativar lembrete</button>
+        <button class="btn secondary small" id="btn-testar-push" style="display:none;">Enviar notificação de teste</button>
       </div>
       <div id="push-status" style="font-size:12.5px; color:var(--muted); margin-top:10px;"></div>
     </div>
@@ -1328,10 +1329,12 @@
     if(salvo){
       $('btn-ativar-push').style.display = 'none';
       $('btn-desativar-push').style.display = 'inline-block';
+      $('btn-testar-push').style.display = 'inline-block';
       $('push-status').textContent = 'Lembrete ativado ✓ Você recebe um aviso às 22h nos dias sem lançamento.';
     } else {
       $('btn-ativar-push').style.display = 'inline-block';
       $('btn-desativar-push').style.display = 'none';
+      $('btn-testar-push').style.display = 'none';
       $('push-status').textContent = '';
     }
   }
@@ -1378,6 +1381,29 @@
       try{ await db().collection('users').doc(u).collection('meta').doc('pushSubscription').delete(); }catch(e){}
     }
     await atualizarStatusPush();
+  });
+
+  $('btn-testar-push').addEventListener('click', async ()=>{
+    const btn = $('btn-testar-push');
+    btn.disabled = true;
+    $('push-status').textContent = 'Enviando notificação de teste...';
+    try{
+      const token = await firebase.auth().currentUser.getIdToken();
+      const resp = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json();
+      if(data.ok){
+        $('push-status').textContent = 'Notificação de teste enviada ✓ Deve chegar em alguns segundos.';
+      } else {
+        $('push-status').textContent = 'Não deu certo: ' + (data.error || 'erro desconhecido.');
+      }
+    }catch(e){
+      console.error(e);
+      $('push-status').textContent = 'Não foi possível enviar agora. Confira sua internet e tente de novo.';
+    }
+    btn.disabled = false;
   });
 
   firebase.auth().onAuthStateChanged(async (user)=>{
