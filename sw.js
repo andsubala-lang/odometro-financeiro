@@ -1,4 +1,4 @@
-const CACHE_NAME = 'odometro-financeiro-v29';
+const CACHE_NAME = 'odometro-financeiro-v30';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './firebase-config.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-badge.png',
   './icons/icon-maskable-512.png'
 ];
 
@@ -45,7 +46,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: './icons/icon-192.png',
-      badge: './icons/icon-192.png',
+      badge: './icons/icon-badge.png',
       tag: 'lembrete-diario'
     })
   );
