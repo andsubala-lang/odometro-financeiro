@@ -1393,7 +1393,9 @@
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token }
       });
-      const data = await resp.json();
+      let data;
+      try{ data = await resp.json(); }
+      catch(parseErr){ throw new Error(`O servidor respondeu algo inesperado (status ${resp.status}). Confira se subiu a pasta api/ e configurou as variáveis de ambiente no Vercel.`); }
       if(data.ok){
         $('push-status').textContent = 'Notificação de teste enviada ✓ Deve chegar em alguns segundos.';
       } else {
@@ -1401,7 +1403,7 @@
       }
     }catch(e){
       console.error(e);
-      $('push-status').textContent = 'Não foi possível enviar agora. Confira sua internet e tente de novo.';
+      $('push-status').textContent = e.message || 'Não foi possível enviar agora. Confira sua internet e tente de novo.';
     }
     btn.disabled = false;
   });
