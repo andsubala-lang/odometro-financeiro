@@ -4,17 +4,27 @@
 const webpush = require('web-push');
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+function inicializar(){
+  if (admin.apps.length) return;
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    throw new Error('Variável FIREBASE_SERVICE_ACCOUNT_JSON não configurada no Vercel.');
+  }
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    throw new Error('Variáveis VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY não configuradas no Vercel.');
+  }
+  let serviceAccount;
+  try{
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }catch(e){
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON não é um JSON válido — confira se colou o conteúdo inteiro do arquivo.');
+  }
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  webpush.setVapidDetails(
+    'mailto:odometro-financeiro@example.com',
+    process.env.VAPID_PUBLIC_KEY.trim(),
+    process.env.VAPID_PRIVATE_KEY.trim()
+  );
 }
-const db = admin.firestore();
-
-webpush.setVapidDetails(
-  'mailto:odometro-financeiro@example.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -22,6 +32,9 @@ module.exports = async (req, res) => {
     return;
   }
   try {
+    inicializar();
+    const db = admin.firestore();
+
     const authHeader = req.headers.authorization || '';
     const token = authHeader.replace('Bearer ', '');
     if (!token) {
